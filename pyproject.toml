@@ -29,4 +29,4 @@ dependencies = ["django>=5.0.0","asgiref>=3.0.0","redis>=5.0.0","msgpack>=1.0.0"
 [project.urls]
 "Homepage" = "https://github.com/connor-makowski/django_sockets"
 "Bug Tracker" = "https://github.com/connor-makowski/django_sockets/issues"
-"Documentation" = "https://connor-makowski.github.io/django_sockets/django_sockets/enforcer.html"
+"Documentation" = "https://connor-makowski.github.io/django_sockets/django_sockets.html"

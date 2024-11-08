@@ -38,12 +38,15 @@ pip install django_sockets
         docker kill django_sockets_cache
         ```
 
-# Implement in a Django Project
+# Usage
 
-## TODO
+Low level docs: https://connor-makowski.github.io/django_sockets/django_sockets.html
 
+## Implement in a Django Project
 
-# Examples Without Django
+### TODO
+
+## Examples Without Django
 
 ### Example Subscribing & Broadcasting
 ```py
