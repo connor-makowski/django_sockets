@@ -17,7 +17,7 @@ export version_options="$VERSION $OLD_DOC_VERSIONS"
 # generate the docs for a version function:
 function generate_docs() {
     INPUT_VERSION=$1
-    python3 -m pdoc -o ./docs/$INPUT_VERSION -t ./doc_template django_sockets !django_sockets.middleware
+    python3 -m pdoc -o ./docs/$INPUT_VERSION -t ./doc_template django_sockets
 }
 
 pip install -r requirements.txt

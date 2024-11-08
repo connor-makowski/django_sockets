@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.db import close_old_connections
 from django.core.exceptions import ImproperlyConfigured
 from django.urls.exceptions import Resolver404
@@ -9,6 +8,22 @@ from asgiref.sync import SyncToAsync
 
 logger = logging.getLogger(__name__)
 
+def get_django_settings():
+    """
+    Get the Django settings
+    """
+    try:
+        return settings
+    except:
+        pass
+    try:
+        from django.conf import settings
+        if settings.configured:
+            return settings
+    except:
+        pass
+    return None
+
 
 def get_config(config=None):
     """
@@ -18,9 +33,9 @@ def get_config(config=None):
     if config is not None:
         return config
     # If the config is not passed, try to get it from the Django settings
-    elif settings.configured:
-        if hasattr(settings, "DJANGO_SOCKETS_CONFIG"):
-            return settings.DJANGO_SOCKETS_CONFIG
+    django_settings = get_django_settings()
+    if hasattr(django_settings, "DJANGO_SOCKETS_CONFIG"):
+        return django_settings.DJANGO_SOCKETS_CONFIG
     # If nothing has been returned yet, return a default configuration
     return {"hosts": [{"address": "redis://0.0.0.0:6379"}]}
 
