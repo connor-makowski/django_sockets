@@ -1,0 +1,32 @@
+[tool.black]
+line-length = 80
+target-version = ['py39']
+exclude = '/.*(__pycache__).*/'
+
+[tool.setuptools]
+py-modules = ["django_sockets"]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "django_sockets"
+version = "1.0.0"
+description = "Simplified Django websocket processes designed to work with cloud caches"
+authors = [
+    {name="Connor Makowski", email="conmak@mit.edu"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    'License :: OSI Approved :: MIT License',
+    "Operating System :: OS Independent",
+]
+dependencies = ["django>=5.0.0","asgiref>=3.0.0","redis>=5.0.0","msgpack>=1.0.0"]
+
+[project.urls]
+"Homepage" = "https://github.com/connor-makowski/django_sockets"
+"Bug Tracker" = "https://github.com/connor-makowski/django_sockets/issues"
+"Documentation" = "https://connor-makowski.github.io/django_sockets/django_sockets/enforcer.html"
