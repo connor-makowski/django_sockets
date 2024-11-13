@@ -6,7 +6,13 @@ logger = logging.getLogger(__name__)
 
 
 class BaseSocketServer(Broadcaster):
-    def __init__(self, scope, receive, send, config=None):
+    def __init__(
+        self,
+        scope,
+        receive,
+        send,
+        config={"hosts": [{"address": "redis://0.0.0.0:6379"}]},
+    ):
         """
         Initialize the socket server
 
@@ -24,9 +30,7 @@ class BaseSocketServer(Broadcaster):
         - config: dict = The configuration for the socket server
             - hosts: list = A list of dictionaries that contain the host information for the socket server
                 - See: django_sockets.pubsub.PubSubLayer docs for more more comprehensive docs on the config parameter
-            - Default:
-                - If provided in django settings: settings.DJANGO_SOCKETS_CONFIG
-                - Else: {'hosts': [{'address': 'redis://0.0.0.0:6379'}]}
+            - Default: {'hosts': [{'address': 'redis://0.0.0.0:6379'}]}
         """
         self.scope = scope
         self.__receive__ = receive

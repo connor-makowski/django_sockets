@@ -8,37 +8,6 @@ from asgiref.sync import SyncToAsync
 
 logger = logging.getLogger(__name__)
 
-def get_django_settings():
-    """
-    Get the Django settings
-    """
-    try:
-        return settings
-    except:
-        pass
-    try:
-        from django.conf import settings
-        if settings.configured:
-            return settings
-    except:
-        pass
-    return None
-
-
-def get_config(config=None):
-    """
-    Get the configuration for the socket server
-    """
-    # If the config is passed, return it.
-    if config is not None:
-        return config
-    # If the config is not passed, try to get it from the Django settings
-    django_settings = get_django_settings()
-    if hasattr(django_settings, "DJANGO_SOCKETS_CONFIG"):
-        return django_settings.DJANGO_SOCKETS_CONFIG
-    # If nothing has been returned yet, return a default configuration
-    return {"hosts": [{"address": "redis://0.0.0.0:6379"}]}
-
 
 def run_in_thread(command, *args, **kwargs):
     """

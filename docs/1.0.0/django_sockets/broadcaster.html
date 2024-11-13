@@ -66,8 +66,8 @@
 <footer>
 <select id="version-selector">
     <option value="latest">latest</option>
+        <option value="1.1.0">1.1.0</option>
         <option value="1.0.0">1.0.0</option>
-        <option value=""></option>
 </select>
 <script>
     // Set the currently selected option to be equivalent to that of the url version.
@@ -110,105 +110,110 @@
 
                         <label class="view-source-button" for="mod-broadcaster-view-source"><span>View Source</span></label>
 
-                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="kn">import</span> <span class="nn">asyncio</span><span class="o">,</span> <span class="nn">logging</span>
-</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a>
-</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="kn">from</span> <span class="nn">.pubsub</span> <span class="kn">import</span> <span class="n">PubSubLayer</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">ensure_loop_running</span><span class="p">,</span> <span class="n">get_config</span>
-</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a>
-</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="k">class</span> <span class="nc">Broadcaster</span><span class="p">:</span>
-</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span> <span class="o">=</span> <span class="n">ensure_loop_running</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_pubsub_layer__</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__usable__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a>    <span class="c1"># Sync Functions</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>    <span class="k">def</span> <span class="nf">broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="p">[</span><span class="nb">dict</span> <span class="o">|</span> <span class="nb">list</span><span class="p">]):</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="sd">        Broadcast data to a specific channel or all channels that this socket server is subscribed to.</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="sd">        Requires:</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a><span class="sd">        - channel: str = The channel to broadcast the data to</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a><span class="sd">        - data: [dict|list] = The data to broadcast to the channel</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">run_coroutine_threadsafe</span><span class="p">(</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">async_broadcast</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">data</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>        <span class="p">)</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>    <span class="k">def</span> <span class="nf">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="sd">        Subscribe to a channel to receive data from broadcasts</span>
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="sd">        Requires:</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a>
-</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="sd">        - channel: str = The channel to subscribe to</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">run_coroutine_threadsafe</span><span class="p">(</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">async_subscribe</span><span class="p">(</span><span class="n">channel</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span>
-</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a>        <span class="p">)</span>
-</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a>
-</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>    <span class="c1"># Async Functions</span>
-</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a><span class="sd">        Broadcast data to a channel where all relevant clients will receive the data</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a><span class="sd">        and send it to the client</span>
-</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a>
-</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a><span class="sd">        Requires:</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a>
-</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a><span class="sd">        - channel: str = The channel to broadcast the data to</span>
-</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a><span class="sd">        - data: [dict|list] = The data to broadcast to the channel</span>
-</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
-</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__warn_on_not_usable__</span><span class="p">()</span>
-</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">channel</span><span class="p">),</span> <span class="n">data</span><span class="p">)</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a>
-</span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a><span class="sd">        Subscribe to a channel to receive data from broadcasts</span>
-</span><span id="L-60"><a href="#L-60"><span class="linenos">60</span></a>
-</span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a><span class="sd">        Requires:</span>
-</span><span id="L-62"><a href="#L-62"><span class="linenos">62</span></a>
-</span><span id="L-63"><a href="#L-63"><span class="linenos">63</span></a><span class="sd">        - channel: str = The channel to subscribe to</span>
-</span><span id="L-64"><a href="#L-64"><span class="linenos">64</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="L-65"><a href="#L-65"><span class="linenos">65</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__warn_on_not_usable__</span><span class="p">()</span>
-</span><span id="L-66"><a href="#L-66"><span class="linenos">66</span></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">channel</span><span class="p">))</span>
-</span><span id="L-67"><a href="#L-67"><span class="linenos">67</span></a>
-</span><span id="L-68"><a href="#L-68"><span class="linenos">68</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_receive_broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-69"><a href="#L-69"><span class="linenos">69</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-70"><a href="#L-70"><span class="linenos">70</span></a><span class="sd">        Receive a broadcast from a channel that this socket server is subscribed to</span>
-</span><span id="L-71"><a href="#L-71"><span class="linenos">71</span></a>
-</span><span id="L-72"><a href="#L-72"><span class="linenos">72</span></a><span class="sd">        Returns:</span>
-</span><span id="L-73"><a href="#L-73"><span class="linenos">73</span></a>
-</span><span id="L-74"><a href="#L-74"><span class="linenos">74</span></a><span class="sd">        - channel: str = The channel that the data was broadcasted to</span>
-</span><span id="L-75"><a href="#L-75"><span class="linenos">75</span></a><span class="sd">        - data: [dict|list] = The data that was broadcasted to the channel</span>
-</span><span id="L-76"><a href="#L-76"><span class="linenos">76</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
-</span><span id="L-77"><a href="#L-77"><span class="linenos">77</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="L-78"><a href="#L-78"><span class="linenos">78</span></a>        <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">receive</span><span class="p">()</span>
-</span><span id="L-79"><a href="#L-79"><span class="linenos">79</span></a>        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;channel&quot;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
-</span><span id="L-80"><a href="#L-80"><span class="linenos">80</span></a>
-</span><span id="L-81"><a href="#L-81"><span class="linenos">81</span></a>    <span class="c1"># Internal Methods</span>
-</span><span id="L-82"><a href="#L-82"><span class="linenos">82</span></a>    <span class="k">def</span> <span class="nf">__get_pubsub_layer__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="L-83"><a href="#L-83"><span class="linenos">83</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-84"><a href="#L-84"><span class="linenos">84</span></a><span class="sd">        A method to get the PubSubLayer given the settings.DJANGO_SOCKETS_CONFIG</span>
-</span><span id="L-85"><a href="#L-85"><span class="linenos">85</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="L-86"><a href="#L-86"><span class="linenos">86</span></a>        <span class="n">config</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-</span><span id="L-87"><a href="#L-87"><span class="linenos">87</span></a>        <span class="k">if</span> <span class="s2">&quot;hosts&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-</span><span id="L-88"><a href="#L-88"><span class="linenos">88</span></a>            <span class="k">return</span> <span class="n">PubSubLayer</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="p">)</span>
-</span><span id="L-89"><a href="#L-89"><span class="linenos">89</span></a>        <span class="k">return</span> <span class="kc">None</span>
-</span><span id="L-90"><a href="#L-90"><span class="linenos">90</span></a>
-</span><span id="L-91"><a href="#L-91"><span class="linenos">91</span></a>    <span class="k">def</span> <span class="nf">__warn_on_not_usable__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-92"><a href="#L-92"><span class="linenos">92</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-93"><a href="#L-93"><span class="linenos">93</span></a><span class="sd">        Warn the user if the broadcaster is not usable</span>
-</span><span id="L-94"><a href="#L-94"><span class="linenos">94</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="L-95"><a href="#L-95"><span class="linenos">95</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__usable__</span><span class="p">:</span>
-</span><span id="L-96"><a href="#L-96"><span class="linenos">96</span></a>            <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
-</span><span id="L-97"><a href="#L-97"><span class="linenos">97</span></a>                <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span>
-</span><span id="L-98"><a href="#L-98"><span class="linenos">98</span></a>                <span class="s2">&quot;No hosts provided in settings.DJANGO_SOCKETS_CONFIG. Broadcasting / Subscribing is not possible.&quot;</span><span class="p">,</span>
-</span><span id="L-99"><a href="#L-99"><span class="linenos">99</span></a>            <span class="p">)</span>
+                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos">  1</span></a><span class="kn">import</span> <span class="nn">asyncio</span><span class="o">,</span> <span class="nn">logging</span>
+</span><span id="L-2"><a href="#L-2"><span class="linenos">  2</span></a>
+</span><span id="L-3"><a href="#L-3"><span class="linenos">  3</span></a><span class="kn">from</span> <span class="nn">.pubsub</span> <span class="kn">import</span> <span class="n">PubSubLayer</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos">  4</span></a><span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">ensure_loop_running</span>
+</span><span id="L-5"><a href="#L-5"><span class="linenos">  5</span></a>
+</span><span id="L-6"><a href="#L-6"><span class="linenos">  6</span></a><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos">  7</span></a>
+</span><span id="L-8"><a href="#L-8"><span class="linenos">  8</span></a>
+</span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a><span class="k">class</span> <span class="nc">Broadcaster</span><span class="p">:</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a>        <span class="bp">self</span><span class="p">,</span>
+</span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a>        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+</span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a>        <span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a>        <span class="n">config</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;hosts&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="s2">&quot;redis://0.0.0.0:6379&quot;</span><span class="p">}]},</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a>        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a>    <span class="p">):</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos"> 17</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span> <span class="o">=</span> <span class="n">ensure_loop_running</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos"> 18</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_pubsub_layer__</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos"> 19</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__usable__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a>
+</span><span id="L-21"><a href="#L-21"><span class="linenos"> 21</span></a>    <span class="c1"># Sync Functions</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos"> 22</span></a>    <span class="k">def</span> <span class="nf">broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="p">[</span><span class="nb">dict</span> <span class="o">|</span> <span class="nb">list</span><span class="p">]):</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos"> 24</span></a><span class="sd">        Broadcast data to a specific channel or all channels that this socket server is subscribed to.</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a>
+</span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a><span class="sd">        Requires:</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a>
+</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a><span class="sd">        - channel: str = The channel to broadcast the data to</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a><span class="sd">        - data: [dict|list] = The data to broadcast to the channel</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">run_coroutine_threadsafe</span><span class="p">(</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">async_broadcast</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">data</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a>        <span class="p">)</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a>
+</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a>    <span class="k">def</span> <span class="nf">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a><span class="sd">        Subscribe to a channel to receive data from broadcasts</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a>
+</span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a><span class="sd">        Requires:</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a>
+</span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a><span class="sd">        - channel: str = The channel to subscribe to</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">run_coroutine_threadsafe</span><span class="p">(</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">async_subscribe</span><span class="p">(</span><span class="n">channel</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a>        <span class="p">)</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a>
+</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a>    <span class="c1"># Async Functions</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a><span class="sd">        Broadcast data to a channel where all relevant clients will receive the data</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a><span class="sd">        and send it to the client</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a>
+</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a><span class="sd">        Requires:</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a>
+</span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a><span class="sd">        - channel: str = The channel to broadcast the data to</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a><span class="sd">        - data: [dict|list] = The data to broadcast to the channel</span>
+</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
+</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__warn_on_not_usable__</span><span class="p">()</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">channel</span><span class="p">),</span> <span class="n">data</span><span class="p">)</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a>
+</span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a><span class="sd">        Subscribe to a channel to receive data from broadcasts</span>
+</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a>
+</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a><span class="sd">        Requires:</span>
+</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a>
+</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a><span class="sd">        - channel: str = The channel to subscribe to</span>
+</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__warn_on_not_usable__</span><span class="p">()</span>
+</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">channel</span><span class="p">))</span>
+</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a>
+</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_receive_broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a><span class="sd">        Receive a broadcast from a channel that this socket server is subscribed to</span>
+</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a>
+</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a><span class="sd">        Returns:</span>
+</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a>
+</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a><span class="sd">        - channel: str = The channel that the data was broadcasted to</span>
+</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a><span class="sd">        - data: [dict|list] = The data that was broadcasted to the channel</span>
+</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
+</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a>        <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">receive</span><span class="p">()</span>
+</span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a>        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;channel&quot;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a>
+</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a>    <span class="c1"># Internal Methods</span>
+</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a>    <span class="k">def</span> <span class="nf">__get_pubsub_layer__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()):</span>
+</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a><span class="sd">        A method to get the PubSubLayer given a configuration dictionary</span>
+</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a>        <span class="k">if</span> <span class="s2">&quot;hosts&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a>            <span class="k">return</span> <span class="n">PubSubLayer</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="p">)</span>
+</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a>        <span class="k">return</span> <span class="kc">None</span>
+</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a>
+</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a>    <span class="k">def</span> <span class="nf">__warn_on_not_usable__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a><span class="sd">        Warn the user if the broadcaster is not usable</span>
+</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__usable__</span><span class="p">:</span>
+</span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a>            <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a>                <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span>
+</span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a>                <span class="s2">&quot;No hosts provided in settings.DJANGO_SOCKETS_CONFIG. Broadcasting / Subscribing is not possible.&quot;</span><span class="p">,</span>
+</span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a>            <span class="p">)</span>
 </span></pre></div>
 
 
@@ -237,96 +242,101 @@
     </div>
     <a class="headerlink" href="#Broadcaster"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="Broadcaster-10"><a href="#Broadcaster-10"><span class="linenos"> 10</span></a><span class="k">class</span> <span class="nc">Broadcaster</span><span class="p">:</span>
-</span><span id="Broadcaster-11"><a href="#Broadcaster-11"><span class="linenos"> 11</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="Broadcaster-12"><a href="#Broadcaster-12"><span class="linenos"> 12</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span> <span class="o">=</span> <span class="n">ensure_loop_running</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
-</span><span id="Broadcaster-13"><a href="#Broadcaster-13"><span class="linenos"> 13</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_pubsub_layer__</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span id="Broadcaster-14"><a href="#Broadcaster-14"><span class="linenos"> 14</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__usable__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</span><span id="Broadcaster-15"><a href="#Broadcaster-15"><span class="linenos"> 15</span></a>
-</span><span id="Broadcaster-16"><a href="#Broadcaster-16"><span class="linenos"> 16</span></a>    <span class="c1"># Sync Functions</span>
-</span><span id="Broadcaster-17"><a href="#Broadcaster-17"><span class="linenos"> 17</span></a>    <span class="k">def</span> <span class="nf">broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="p">[</span><span class="nb">dict</span> <span class="o">|</span> <span class="nb">list</span><span class="p">]):</span>
-</span><span id="Broadcaster-18"><a href="#Broadcaster-18"><span class="linenos"> 18</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Broadcaster-19"><a href="#Broadcaster-19"><span class="linenos"> 19</span></a><span class="sd">        Broadcast data to a specific channel or all channels that this socket server is subscribed to.</span>
-</span><span id="Broadcaster-20"><a href="#Broadcaster-20"><span class="linenos"> 20</span></a>
-</span><span id="Broadcaster-21"><a href="#Broadcaster-21"><span class="linenos"> 21</span></a><span class="sd">        Requires:</span>
-</span><span id="Broadcaster-22"><a href="#Broadcaster-22"><span class="linenos"> 22</span></a>
-</span><span id="Broadcaster-23"><a href="#Broadcaster-23"><span class="linenos"> 23</span></a><span class="sd">        - channel: str = The channel to broadcast the data to</span>
-</span><span id="Broadcaster-24"><a href="#Broadcaster-24"><span class="linenos"> 24</span></a><span class="sd">        - data: [dict|list] = The data to broadcast to the channel</span>
-</span><span id="Broadcaster-25"><a href="#Broadcaster-25"><span class="linenos"> 25</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
-</span><span id="Broadcaster-26"><a href="#Broadcaster-26"><span class="linenos"> 26</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Broadcaster-27"><a href="#Broadcaster-27"><span class="linenos"> 27</span></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">run_coroutine_threadsafe</span><span class="p">(</span>
-</span><span id="Broadcaster-28"><a href="#Broadcaster-28"><span class="linenos"> 28</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">async_broadcast</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">data</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span>
-</span><span id="Broadcaster-29"><a href="#Broadcaster-29"><span class="linenos"> 29</span></a>        <span class="p">)</span>
-</span><span id="Broadcaster-30"><a href="#Broadcaster-30"><span class="linenos"> 30</span></a>
-</span><span id="Broadcaster-31"><a href="#Broadcaster-31"><span class="linenos"> 31</span></a>    <span class="k">def</span> <span class="nf">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="Broadcaster-32"><a href="#Broadcaster-32"><span class="linenos"> 32</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Broadcaster-33"><a href="#Broadcaster-33"><span class="linenos"> 33</span></a><span class="sd">        Subscribe to a channel to receive data from broadcasts</span>
-</span><span id="Broadcaster-34"><a href="#Broadcaster-34"><span class="linenos"> 34</span></a>
-</span><span id="Broadcaster-35"><a href="#Broadcaster-35"><span class="linenos"> 35</span></a><span class="sd">        Requires:</span>
+</span><span id="Broadcaster-11"><a href="#Broadcaster-11"><span class="linenos"> 11</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+</span><span id="Broadcaster-12"><a href="#Broadcaster-12"><span class="linenos"> 12</span></a>        <span class="bp">self</span><span class="p">,</span>
+</span><span id="Broadcaster-13"><a href="#Broadcaster-13"><span class="linenos"> 13</span></a>        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+</span><span id="Broadcaster-14"><a href="#Broadcaster-14"><span class="linenos"> 14</span></a>        <span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="Broadcaster-15"><a href="#Broadcaster-15"><span class="linenos"> 15</span></a>        <span class="n">config</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;hosts&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="s2">&quot;redis://0.0.0.0:6379&quot;</span><span class="p">}]},</span>
+</span><span id="Broadcaster-16"><a href="#Broadcaster-16"><span class="linenos"> 16</span></a>        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span id="Broadcaster-17"><a href="#Broadcaster-17"><span class="linenos"> 17</span></a>    <span class="p">):</span>
+</span><span id="Broadcaster-18"><a href="#Broadcaster-18"><span class="linenos"> 18</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span> <span class="o">=</span> <span class="n">ensure_loop_running</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
+</span><span id="Broadcaster-19"><a href="#Broadcaster-19"><span class="linenos"> 19</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_pubsub_layer__</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span id="Broadcaster-20"><a href="#Broadcaster-20"><span class="linenos"> 20</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__usable__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span id="Broadcaster-21"><a href="#Broadcaster-21"><span class="linenos"> 21</span></a>
+</span><span id="Broadcaster-22"><a href="#Broadcaster-22"><span class="linenos"> 22</span></a>    <span class="c1"># Sync Functions</span>
+</span><span id="Broadcaster-23"><a href="#Broadcaster-23"><span class="linenos"> 23</span></a>    <span class="k">def</span> <span class="nf">broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="p">[</span><span class="nb">dict</span> <span class="o">|</span> <span class="nb">list</span><span class="p">]):</span>
+</span><span id="Broadcaster-24"><a href="#Broadcaster-24"><span class="linenos"> 24</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Broadcaster-25"><a href="#Broadcaster-25"><span class="linenos"> 25</span></a><span class="sd">        Broadcast data to a specific channel or all channels that this socket server is subscribed to.</span>
+</span><span id="Broadcaster-26"><a href="#Broadcaster-26"><span class="linenos"> 26</span></a>
+</span><span id="Broadcaster-27"><a href="#Broadcaster-27"><span class="linenos"> 27</span></a><span class="sd">        Requires:</span>
+</span><span id="Broadcaster-28"><a href="#Broadcaster-28"><span class="linenos"> 28</span></a>
+</span><span id="Broadcaster-29"><a href="#Broadcaster-29"><span class="linenos"> 29</span></a><span class="sd">        - channel: str = The channel to broadcast the data to</span>
+</span><span id="Broadcaster-30"><a href="#Broadcaster-30"><span class="linenos"> 30</span></a><span class="sd">        - data: [dict|list] = The data to broadcast to the channel</span>
+</span><span id="Broadcaster-31"><a href="#Broadcaster-31"><span class="linenos"> 31</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
+</span><span id="Broadcaster-32"><a href="#Broadcaster-32"><span class="linenos"> 32</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Broadcaster-33"><a href="#Broadcaster-33"><span class="linenos"> 33</span></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">run_coroutine_threadsafe</span><span class="p">(</span>
+</span><span id="Broadcaster-34"><a href="#Broadcaster-34"><span class="linenos"> 34</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">async_broadcast</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">data</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span>
+</span><span id="Broadcaster-35"><a href="#Broadcaster-35"><span class="linenos"> 35</span></a>        <span class="p">)</span>
 </span><span id="Broadcaster-36"><a href="#Broadcaster-36"><span class="linenos"> 36</span></a>
-</span><span id="Broadcaster-37"><a href="#Broadcaster-37"><span class="linenos"> 37</span></a><span class="sd">        - channel: str = The channel to subscribe to</span>
-</span><span id="Broadcaster-38"><a href="#Broadcaster-38"><span class="linenos"> 38</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Broadcaster-39"><a href="#Broadcaster-39"><span class="linenos"> 39</span></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">run_coroutine_threadsafe</span><span class="p">(</span>
-</span><span id="Broadcaster-40"><a href="#Broadcaster-40"><span class="linenos"> 40</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">async_subscribe</span><span class="p">(</span><span class="n">channel</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span>
-</span><span id="Broadcaster-41"><a href="#Broadcaster-41"><span class="linenos"> 41</span></a>        <span class="p">)</span>
+</span><span id="Broadcaster-37"><a href="#Broadcaster-37"><span class="linenos"> 37</span></a>    <span class="k">def</span> <span class="nf">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="Broadcaster-38"><a href="#Broadcaster-38"><span class="linenos"> 38</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Broadcaster-39"><a href="#Broadcaster-39"><span class="linenos"> 39</span></a><span class="sd">        Subscribe to a channel to receive data from broadcasts</span>
+</span><span id="Broadcaster-40"><a href="#Broadcaster-40"><span class="linenos"> 40</span></a>
+</span><span id="Broadcaster-41"><a href="#Broadcaster-41"><span class="linenos"> 41</span></a><span class="sd">        Requires:</span>
 </span><span id="Broadcaster-42"><a href="#Broadcaster-42"><span class="linenos"> 42</span></a>
-</span><span id="Broadcaster-43"><a href="#Broadcaster-43"><span class="linenos"> 43</span></a>    <span class="c1"># Async Functions</span>
-</span><span id="Broadcaster-44"><a href="#Broadcaster-44"><span class="linenos"> 44</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-</span><span id="Broadcaster-45"><a href="#Broadcaster-45"><span class="linenos"> 45</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Broadcaster-46"><a href="#Broadcaster-46"><span class="linenos"> 46</span></a><span class="sd">        Broadcast data to a channel where all relevant clients will receive the data</span>
-</span><span id="Broadcaster-47"><a href="#Broadcaster-47"><span class="linenos"> 47</span></a><span class="sd">        and send it to the client</span>
+</span><span id="Broadcaster-43"><a href="#Broadcaster-43"><span class="linenos"> 43</span></a><span class="sd">        - channel: str = The channel to subscribe to</span>
+</span><span id="Broadcaster-44"><a href="#Broadcaster-44"><span class="linenos"> 44</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Broadcaster-45"><a href="#Broadcaster-45"><span class="linenos"> 45</span></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">run_coroutine_threadsafe</span><span class="p">(</span>
+</span><span id="Broadcaster-46"><a href="#Broadcaster-46"><span class="linenos"> 46</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">async_subscribe</span><span class="p">(</span><span class="n">channel</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span>
+</span><span id="Broadcaster-47"><a href="#Broadcaster-47"><span class="linenos"> 47</span></a>        <span class="p">)</span>
 </span><span id="Broadcaster-48"><a href="#Broadcaster-48"><span class="linenos"> 48</span></a>
-</span><span id="Broadcaster-49"><a href="#Broadcaster-49"><span class="linenos"> 49</span></a><span class="sd">        Requires:</span>
-</span><span id="Broadcaster-50"><a href="#Broadcaster-50"><span class="linenos"> 50</span></a>
-</span><span id="Broadcaster-51"><a href="#Broadcaster-51"><span class="linenos"> 51</span></a><span class="sd">        - channel: str = The channel to broadcast the data to</span>
-</span><span id="Broadcaster-52"><a href="#Broadcaster-52"><span class="linenos"> 52</span></a><span class="sd">        - data: [dict|list] = The data to broadcast to the channel</span>
-</span><span id="Broadcaster-53"><a href="#Broadcaster-53"><span class="linenos"> 53</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
-</span><span id="Broadcaster-54"><a href="#Broadcaster-54"><span class="linenos"> 54</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Broadcaster-55"><a href="#Broadcaster-55"><span class="linenos"> 55</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__warn_on_not_usable__</span><span class="p">()</span>
-</span><span id="Broadcaster-56"><a href="#Broadcaster-56"><span class="linenos"> 56</span></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">channel</span><span class="p">),</span> <span class="n">data</span><span class="p">)</span>
-</span><span id="Broadcaster-57"><a href="#Broadcaster-57"><span class="linenos"> 57</span></a>
-</span><span id="Broadcaster-58"><a href="#Broadcaster-58"><span class="linenos"> 58</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="Broadcaster-59"><a href="#Broadcaster-59"><span class="linenos"> 59</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Broadcaster-60"><a href="#Broadcaster-60"><span class="linenos"> 60</span></a><span class="sd">        Subscribe to a channel to receive data from broadcasts</span>
-</span><span id="Broadcaster-61"><a href="#Broadcaster-61"><span class="linenos"> 61</span></a>
-</span><span id="Broadcaster-62"><a href="#Broadcaster-62"><span class="linenos"> 62</span></a><span class="sd">        Requires:</span>
+</span><span id="Broadcaster-49"><a href="#Broadcaster-49"><span class="linenos"> 49</span></a>    <span class="c1"># Async Functions</span>
+</span><span id="Broadcaster-50"><a href="#Broadcaster-50"><span class="linenos"> 50</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+</span><span id="Broadcaster-51"><a href="#Broadcaster-51"><span class="linenos"> 51</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Broadcaster-52"><a href="#Broadcaster-52"><span class="linenos"> 52</span></a><span class="sd">        Broadcast data to a channel where all relevant clients will receive the data</span>
+</span><span id="Broadcaster-53"><a href="#Broadcaster-53"><span class="linenos"> 53</span></a><span class="sd">        and send it to the client</span>
+</span><span id="Broadcaster-54"><a href="#Broadcaster-54"><span class="linenos"> 54</span></a>
+</span><span id="Broadcaster-55"><a href="#Broadcaster-55"><span class="linenos"> 55</span></a><span class="sd">        Requires:</span>
+</span><span id="Broadcaster-56"><a href="#Broadcaster-56"><span class="linenos"> 56</span></a>
+</span><span id="Broadcaster-57"><a href="#Broadcaster-57"><span class="linenos"> 57</span></a><span class="sd">        - channel: str = The channel to broadcast the data to</span>
+</span><span id="Broadcaster-58"><a href="#Broadcaster-58"><span class="linenos"> 58</span></a><span class="sd">        - data: [dict|list] = The data to broadcast to the channel</span>
+</span><span id="Broadcaster-59"><a href="#Broadcaster-59"><span class="linenos"> 59</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
+</span><span id="Broadcaster-60"><a href="#Broadcaster-60"><span class="linenos"> 60</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Broadcaster-61"><a href="#Broadcaster-61"><span class="linenos"> 61</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__warn_on_not_usable__</span><span class="p">()</span>
+</span><span id="Broadcaster-62"><a href="#Broadcaster-62"><span class="linenos"> 62</span></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">channel</span><span class="p">),</span> <span class="n">data</span><span class="p">)</span>
 </span><span id="Broadcaster-63"><a href="#Broadcaster-63"><span class="linenos"> 63</span></a>
-</span><span id="Broadcaster-64"><a href="#Broadcaster-64"><span class="linenos"> 64</span></a><span class="sd">        - channel: str = The channel to subscribe to</span>
-</span><span id="Broadcaster-65"><a href="#Broadcaster-65"><span class="linenos"> 65</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Broadcaster-66"><a href="#Broadcaster-66"><span class="linenos"> 66</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__warn_on_not_usable__</span><span class="p">()</span>
-</span><span id="Broadcaster-67"><a href="#Broadcaster-67"><span class="linenos"> 67</span></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">channel</span><span class="p">))</span>
-</span><span id="Broadcaster-68"><a href="#Broadcaster-68"><span class="linenos"> 68</span></a>
-</span><span id="Broadcaster-69"><a href="#Broadcaster-69"><span class="linenos"> 69</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_receive_broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="Broadcaster-70"><a href="#Broadcaster-70"><span class="linenos"> 70</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Broadcaster-71"><a href="#Broadcaster-71"><span class="linenos"> 71</span></a><span class="sd">        Receive a broadcast from a channel that this socket server is subscribed to</span>
-</span><span id="Broadcaster-72"><a href="#Broadcaster-72"><span class="linenos"> 72</span></a>
-</span><span id="Broadcaster-73"><a href="#Broadcaster-73"><span class="linenos"> 73</span></a><span class="sd">        Returns:</span>
+</span><span id="Broadcaster-64"><a href="#Broadcaster-64"><span class="linenos"> 64</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="Broadcaster-65"><a href="#Broadcaster-65"><span class="linenos"> 65</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Broadcaster-66"><a href="#Broadcaster-66"><span class="linenos"> 66</span></a><span class="sd">        Subscribe to a channel to receive data from broadcasts</span>
+</span><span id="Broadcaster-67"><a href="#Broadcaster-67"><span class="linenos"> 67</span></a>
+</span><span id="Broadcaster-68"><a href="#Broadcaster-68"><span class="linenos"> 68</span></a><span class="sd">        Requires:</span>
+</span><span id="Broadcaster-69"><a href="#Broadcaster-69"><span class="linenos"> 69</span></a>
+</span><span id="Broadcaster-70"><a href="#Broadcaster-70"><span class="linenos"> 70</span></a><span class="sd">        - channel: str = The channel to subscribe to</span>
+</span><span id="Broadcaster-71"><a href="#Broadcaster-71"><span class="linenos"> 71</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Broadcaster-72"><a href="#Broadcaster-72"><span class="linenos"> 72</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__warn_on_not_usable__</span><span class="p">()</span>
+</span><span id="Broadcaster-73"><a href="#Broadcaster-73"><span class="linenos"> 73</span></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">channel</span><span class="p">))</span>
 </span><span id="Broadcaster-74"><a href="#Broadcaster-74"><span class="linenos"> 74</span></a>
-</span><span id="Broadcaster-75"><a href="#Broadcaster-75"><span class="linenos"> 75</span></a><span class="sd">        - channel: str = The channel that the data was broadcasted to</span>
-</span><span id="Broadcaster-76"><a href="#Broadcaster-76"><span class="linenos"> 76</span></a><span class="sd">        - data: [dict|list] = The data that was broadcasted to the channel</span>
-</span><span id="Broadcaster-77"><a href="#Broadcaster-77"><span class="linenos"> 77</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
-</span><span id="Broadcaster-78"><a href="#Broadcaster-78"><span class="linenos"> 78</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Broadcaster-79"><a href="#Broadcaster-79"><span class="linenos"> 79</span></a>        <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">receive</span><span class="p">()</span>
-</span><span id="Broadcaster-80"><a href="#Broadcaster-80"><span class="linenos"> 80</span></a>        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;channel&quot;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
-</span><span id="Broadcaster-81"><a href="#Broadcaster-81"><span class="linenos"> 81</span></a>
-</span><span id="Broadcaster-82"><a href="#Broadcaster-82"><span class="linenos"> 82</span></a>    <span class="c1"># Internal Methods</span>
-</span><span id="Broadcaster-83"><a href="#Broadcaster-83"><span class="linenos"> 83</span></a>    <span class="k">def</span> <span class="nf">__get_pubsub_layer__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="Broadcaster-84"><a href="#Broadcaster-84"><span class="linenos"> 84</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Broadcaster-85"><a href="#Broadcaster-85"><span class="linenos"> 85</span></a><span class="sd">        A method to get the PubSubLayer given the settings.DJANGO_SOCKETS_CONFIG</span>
-</span><span id="Broadcaster-86"><a href="#Broadcaster-86"><span class="linenos"> 86</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Broadcaster-87"><a href="#Broadcaster-87"><span class="linenos"> 87</span></a>        <span class="n">config</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-</span><span id="Broadcaster-88"><a href="#Broadcaster-88"><span class="linenos"> 88</span></a>        <span class="k">if</span> <span class="s2">&quot;hosts&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-</span><span id="Broadcaster-89"><a href="#Broadcaster-89"><span class="linenos"> 89</span></a>            <span class="k">return</span> <span class="n">PubSubLayer</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="p">)</span>
-</span><span id="Broadcaster-90"><a href="#Broadcaster-90"><span class="linenos"> 90</span></a>        <span class="k">return</span> <span class="kc">None</span>
-</span><span id="Broadcaster-91"><a href="#Broadcaster-91"><span class="linenos"> 91</span></a>
-</span><span id="Broadcaster-92"><a href="#Broadcaster-92"><span class="linenos"> 92</span></a>    <span class="k">def</span> <span class="nf">__warn_on_not_usable__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="Broadcaster-93"><a href="#Broadcaster-93"><span class="linenos"> 93</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Broadcaster-94"><a href="#Broadcaster-94"><span class="linenos"> 94</span></a><span class="sd">        Warn the user if the broadcaster is not usable</span>
-</span><span id="Broadcaster-95"><a href="#Broadcaster-95"><span class="linenos"> 95</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Broadcaster-96"><a href="#Broadcaster-96"><span class="linenos"> 96</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__usable__</span><span class="p">:</span>
-</span><span id="Broadcaster-97"><a href="#Broadcaster-97"><span class="linenos"> 97</span></a>            <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
-</span><span id="Broadcaster-98"><a href="#Broadcaster-98"><span class="linenos"> 98</span></a>                <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span>
-</span><span id="Broadcaster-99"><a href="#Broadcaster-99"><span class="linenos"> 99</span></a>                <span class="s2">&quot;No hosts provided in settings.DJANGO_SOCKETS_CONFIG. Broadcasting / Subscribing is not possible.&quot;</span><span class="p">,</span>
-</span><span id="Broadcaster-100"><a href="#Broadcaster-100"><span class="linenos">100</span></a>            <span class="p">)</span>
+</span><span id="Broadcaster-75"><a href="#Broadcaster-75"><span class="linenos"> 75</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_receive_broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="Broadcaster-76"><a href="#Broadcaster-76"><span class="linenos"> 76</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Broadcaster-77"><a href="#Broadcaster-77"><span class="linenos"> 77</span></a><span class="sd">        Receive a broadcast from a channel that this socket server is subscribed to</span>
+</span><span id="Broadcaster-78"><a href="#Broadcaster-78"><span class="linenos"> 78</span></a>
+</span><span id="Broadcaster-79"><a href="#Broadcaster-79"><span class="linenos"> 79</span></a><span class="sd">        Returns:</span>
+</span><span id="Broadcaster-80"><a href="#Broadcaster-80"><span class="linenos"> 80</span></a>
+</span><span id="Broadcaster-81"><a href="#Broadcaster-81"><span class="linenos"> 81</span></a><span class="sd">        - channel: str = The channel that the data was broadcasted to</span>
+</span><span id="Broadcaster-82"><a href="#Broadcaster-82"><span class="linenos"> 82</span></a><span class="sd">        - data: [dict|list] = The data that was broadcasted to the channel</span>
+</span><span id="Broadcaster-83"><a href="#Broadcaster-83"><span class="linenos"> 83</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
+</span><span id="Broadcaster-84"><a href="#Broadcaster-84"><span class="linenos"> 84</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Broadcaster-85"><a href="#Broadcaster-85"><span class="linenos"> 85</span></a>        <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">receive</span><span class="p">()</span>
+</span><span id="Broadcaster-86"><a href="#Broadcaster-86"><span class="linenos"> 86</span></a>        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;channel&quot;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+</span><span id="Broadcaster-87"><a href="#Broadcaster-87"><span class="linenos"> 87</span></a>
+</span><span id="Broadcaster-88"><a href="#Broadcaster-88"><span class="linenos"> 88</span></a>    <span class="c1"># Internal Methods</span>
+</span><span id="Broadcaster-89"><a href="#Broadcaster-89"><span class="linenos"> 89</span></a>    <span class="k">def</span> <span class="nf">__get_pubsub_layer__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()):</span>
+</span><span id="Broadcaster-90"><a href="#Broadcaster-90"><span class="linenos"> 90</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Broadcaster-91"><a href="#Broadcaster-91"><span class="linenos"> 91</span></a><span class="sd">        A method to get the PubSubLayer given a configuration dictionary</span>
+</span><span id="Broadcaster-92"><a href="#Broadcaster-92"><span class="linenos"> 92</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Broadcaster-93"><a href="#Broadcaster-93"><span class="linenos"> 93</span></a>        <span class="k">if</span> <span class="s2">&quot;hosts&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+</span><span id="Broadcaster-94"><a href="#Broadcaster-94"><span class="linenos"> 94</span></a>            <span class="k">return</span> <span class="n">PubSubLayer</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="p">)</span>
+</span><span id="Broadcaster-95"><a href="#Broadcaster-95"><span class="linenos"> 95</span></a>        <span class="k">return</span> <span class="kc">None</span>
+</span><span id="Broadcaster-96"><a href="#Broadcaster-96"><span class="linenos"> 96</span></a>
+</span><span id="Broadcaster-97"><a href="#Broadcaster-97"><span class="linenos"> 97</span></a>    <span class="k">def</span> <span class="nf">__warn_on_not_usable__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="Broadcaster-98"><a href="#Broadcaster-98"><span class="linenos"> 98</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Broadcaster-99"><a href="#Broadcaster-99"><span class="linenos"> 99</span></a><span class="sd">        Warn the user if the broadcaster is not usable</span>
+</span><span id="Broadcaster-100"><a href="#Broadcaster-100"><span class="linenos">100</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Broadcaster-101"><a href="#Broadcaster-101"><span class="linenos">101</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__usable__</span><span class="p">:</span>
+</span><span id="Broadcaster-102"><a href="#Broadcaster-102"><span class="linenos">102</span></a>            <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+</span><span id="Broadcaster-103"><a href="#Broadcaster-103"><span class="linenos">103</span></a>                <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span>
+</span><span id="Broadcaster-104"><a href="#Broadcaster-104"><span class="linenos">104</span></a>                <span class="s2">&quot;No hosts provided in settings.DJANGO_SOCKETS_CONFIG. Broadcasting / Subscribing is not possible.&quot;</span><span class="p">,</span>
+</span><span id="Broadcaster-105"><a href="#Broadcaster-105"><span class="linenos">105</span></a>            <span class="p">)</span>
 </span></pre></div>
 
 
@@ -336,16 +346,22 @@
                                         <input id="Broadcaster.__init__-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 <div class="attr function">
             
-        <span class="name">Broadcaster</span><span class="signature pdoc-code condensed">(<span class="param"><span class="o">*</span><span class="n">args</span>, </span><span class="param"><span class="n">loop</span><span class="o">=</span><span class="kc">None</span>, </span><span class="param"><span class="n">config</span><span class="o">=</span><span class="kc">None</span>, </span><span class="param"><span class="o">**</span><span class="n">kwargs</span></span>)</span>
+        <span class="name">Broadcaster</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="o">*</span><span class="n">args</span>,</span><span class="param">	<span class="n">loop</span><span class="o">=</span><span class="kc">None</span>,</span><span class="param">	<span class="n">config</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;hosts&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;address&#39;</span><span class="p">:</span> <span class="s1">&#39;redis://0.0.0.0:6379&#39;</span><span class="p">}]}</span>,</span><span class="param">	<span class="o">**</span><span class="n">kwargs</span></span>)</span>
 
                 <label class="view-source-button" for="Broadcaster.__init__-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#Broadcaster.__init__"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Broadcaster.__init__-11"><a href="#Broadcaster.__init__-11"><span class="linenos">11</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="Broadcaster.__init__-12"><a href="#Broadcaster.__init__-12"><span class="linenos">12</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span> <span class="o">=</span> <span class="n">ensure_loop_running</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
-</span><span id="Broadcaster.__init__-13"><a href="#Broadcaster.__init__-13"><span class="linenos">13</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_pubsub_layer__</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span id="Broadcaster.__init__-14"><a href="#Broadcaster.__init__-14"><span class="linenos">14</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__usable__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Broadcaster.__init__-11"><a href="#Broadcaster.__init__-11"><span class="linenos">11</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+</span><span id="Broadcaster.__init__-12"><a href="#Broadcaster.__init__-12"><span class="linenos">12</span></a>        <span class="bp">self</span><span class="p">,</span>
+</span><span id="Broadcaster.__init__-13"><a href="#Broadcaster.__init__-13"><span class="linenos">13</span></a>        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+</span><span id="Broadcaster.__init__-14"><a href="#Broadcaster.__init__-14"><span class="linenos">14</span></a>        <span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="Broadcaster.__init__-15"><a href="#Broadcaster.__init__-15"><span class="linenos">15</span></a>        <span class="n">config</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;hosts&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="s2">&quot;redis://0.0.0.0:6379&quot;</span><span class="p">}]},</span>
+</span><span id="Broadcaster.__init__-16"><a href="#Broadcaster.__init__-16"><span class="linenos">16</span></a>        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span id="Broadcaster.__init__-17"><a href="#Broadcaster.__init__-17"><span class="linenos">17</span></a>    <span class="p">):</span>
+</span><span id="Broadcaster.__init__-18"><a href="#Broadcaster.__init__-18"><span class="linenos">18</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span> <span class="o">=</span> <span class="n">ensure_loop_running</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
+</span><span id="Broadcaster.__init__-19"><a href="#Broadcaster.__init__-19"><span class="linenos">19</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_pubsub_layer__</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span id="Broadcaster.__init__-20"><a href="#Broadcaster.__init__-20"><span class="linenos">20</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__usable__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 </span></pre></div>
 
 
@@ -374,19 +390,19 @@
 
     </div>
     <a class="headerlink" href="#Broadcaster.broadcast"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Broadcaster.broadcast-17"><a href="#Broadcaster.broadcast-17"><span class="linenos">17</span></a>    <span class="k">def</span> <span class="nf">broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="p">[</span><span class="nb">dict</span> <span class="o">|</span> <span class="nb">list</span><span class="p">]):</span>
-</span><span id="Broadcaster.broadcast-18"><a href="#Broadcaster.broadcast-18"><span class="linenos">18</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Broadcaster.broadcast-19"><a href="#Broadcaster.broadcast-19"><span class="linenos">19</span></a><span class="sd">        Broadcast data to a specific channel or all channels that this socket server is subscribed to.</span>
-</span><span id="Broadcaster.broadcast-20"><a href="#Broadcaster.broadcast-20"><span class="linenos">20</span></a>
-</span><span id="Broadcaster.broadcast-21"><a href="#Broadcaster.broadcast-21"><span class="linenos">21</span></a><span class="sd">        Requires:</span>
-</span><span id="Broadcaster.broadcast-22"><a href="#Broadcaster.broadcast-22"><span class="linenos">22</span></a>
-</span><span id="Broadcaster.broadcast-23"><a href="#Broadcaster.broadcast-23"><span class="linenos">23</span></a><span class="sd">        - channel: str = The channel to broadcast the data to</span>
-</span><span id="Broadcaster.broadcast-24"><a href="#Broadcaster.broadcast-24"><span class="linenos">24</span></a><span class="sd">        - data: [dict|list] = The data to broadcast to the channel</span>
-</span><span id="Broadcaster.broadcast-25"><a href="#Broadcaster.broadcast-25"><span class="linenos">25</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
-</span><span id="Broadcaster.broadcast-26"><a href="#Broadcaster.broadcast-26"><span class="linenos">26</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Broadcaster.broadcast-27"><a href="#Broadcaster.broadcast-27"><span class="linenos">27</span></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">run_coroutine_threadsafe</span><span class="p">(</span>
-</span><span id="Broadcaster.broadcast-28"><a href="#Broadcaster.broadcast-28"><span class="linenos">28</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">async_broadcast</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">data</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span>
-</span><span id="Broadcaster.broadcast-29"><a href="#Broadcaster.broadcast-29"><span class="linenos">29</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Broadcaster.broadcast-23"><a href="#Broadcaster.broadcast-23"><span class="linenos">23</span></a>    <span class="k">def</span> <span class="nf">broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="p">[</span><span class="nb">dict</span> <span class="o">|</span> <span class="nb">list</span><span class="p">]):</span>
+</span><span id="Broadcaster.broadcast-24"><a href="#Broadcaster.broadcast-24"><span class="linenos">24</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Broadcaster.broadcast-25"><a href="#Broadcaster.broadcast-25"><span class="linenos">25</span></a><span class="sd">        Broadcast data to a specific channel or all channels that this socket server is subscribed to.</span>
+</span><span id="Broadcaster.broadcast-26"><a href="#Broadcaster.broadcast-26"><span class="linenos">26</span></a>
+</span><span id="Broadcaster.broadcast-27"><a href="#Broadcaster.broadcast-27"><span class="linenos">27</span></a><span class="sd">        Requires:</span>
+</span><span id="Broadcaster.broadcast-28"><a href="#Broadcaster.broadcast-28"><span class="linenos">28</span></a>
+</span><span id="Broadcaster.broadcast-29"><a href="#Broadcaster.broadcast-29"><span class="linenos">29</span></a><span class="sd">        - channel: str = The channel to broadcast the data to</span>
+</span><span id="Broadcaster.broadcast-30"><a href="#Broadcaster.broadcast-30"><span class="linenos">30</span></a><span class="sd">        - data: [dict|list] = The data to broadcast to the channel</span>
+</span><span id="Broadcaster.broadcast-31"><a href="#Broadcaster.broadcast-31"><span class="linenos">31</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
+</span><span id="Broadcaster.broadcast-32"><a href="#Broadcaster.broadcast-32"><span class="linenos">32</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Broadcaster.broadcast-33"><a href="#Broadcaster.broadcast-33"><span class="linenos">33</span></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">run_coroutine_threadsafe</span><span class="p">(</span>
+</span><span id="Broadcaster.broadcast-34"><a href="#Broadcaster.broadcast-34"><span class="linenos">34</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">async_broadcast</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">data</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span>
+</span><span id="Broadcaster.broadcast-35"><a href="#Broadcaster.broadcast-35"><span class="linenos">35</span></a>        <span class="p">)</span>
 </span></pre></div>
 
 
@@ -416,17 +432,17 @@
 
     </div>
     <a class="headerlink" href="#Broadcaster.subscribe"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Broadcaster.subscribe-31"><a href="#Broadcaster.subscribe-31"><span class="linenos">31</span></a>    <span class="k">def</span> <span class="nf">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="Broadcaster.subscribe-32"><a href="#Broadcaster.subscribe-32"><span class="linenos">32</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Broadcaster.subscribe-33"><a href="#Broadcaster.subscribe-33"><span class="linenos">33</span></a><span class="sd">        Subscribe to a channel to receive data from broadcasts</span>
-</span><span id="Broadcaster.subscribe-34"><a href="#Broadcaster.subscribe-34"><span class="linenos">34</span></a>
-</span><span id="Broadcaster.subscribe-35"><a href="#Broadcaster.subscribe-35"><span class="linenos">35</span></a><span class="sd">        Requires:</span>
-</span><span id="Broadcaster.subscribe-36"><a href="#Broadcaster.subscribe-36"><span class="linenos">36</span></a>
-</span><span id="Broadcaster.subscribe-37"><a href="#Broadcaster.subscribe-37"><span class="linenos">37</span></a><span class="sd">        - channel: str = The channel to subscribe to</span>
-</span><span id="Broadcaster.subscribe-38"><a href="#Broadcaster.subscribe-38"><span class="linenos">38</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Broadcaster.subscribe-39"><a href="#Broadcaster.subscribe-39"><span class="linenos">39</span></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">run_coroutine_threadsafe</span><span class="p">(</span>
-</span><span id="Broadcaster.subscribe-40"><a href="#Broadcaster.subscribe-40"><span class="linenos">40</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">async_subscribe</span><span class="p">(</span><span class="n">channel</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span>
-</span><span id="Broadcaster.subscribe-41"><a href="#Broadcaster.subscribe-41"><span class="linenos">41</span></a>        <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Broadcaster.subscribe-37"><a href="#Broadcaster.subscribe-37"><span class="linenos">37</span></a>    <span class="k">def</span> <span class="nf">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="Broadcaster.subscribe-38"><a href="#Broadcaster.subscribe-38"><span class="linenos">38</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Broadcaster.subscribe-39"><a href="#Broadcaster.subscribe-39"><span class="linenos">39</span></a><span class="sd">        Subscribe to a channel to receive data from broadcasts</span>
+</span><span id="Broadcaster.subscribe-40"><a href="#Broadcaster.subscribe-40"><span class="linenos">40</span></a>
+</span><span id="Broadcaster.subscribe-41"><a href="#Broadcaster.subscribe-41"><span class="linenos">41</span></a><span class="sd">        Requires:</span>
+</span><span id="Broadcaster.subscribe-42"><a href="#Broadcaster.subscribe-42"><span class="linenos">42</span></a>
+</span><span id="Broadcaster.subscribe-43"><a href="#Broadcaster.subscribe-43"><span class="linenos">43</span></a><span class="sd">        - channel: str = The channel to subscribe to</span>
+</span><span id="Broadcaster.subscribe-44"><a href="#Broadcaster.subscribe-44"><span class="linenos">44</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Broadcaster.subscribe-45"><a href="#Broadcaster.subscribe-45"><span class="linenos">45</span></a>        <span class="n">asyncio</span><span class="o">.</span><span class="n">run_coroutine_threadsafe</span><span class="p">(</span>
+</span><span id="Broadcaster.subscribe-46"><a href="#Broadcaster.subscribe-46"><span class="linenos">46</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">async_subscribe</span><span class="p">(</span><span class="n">channel</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__loop__</span>
+</span><span id="Broadcaster.subscribe-47"><a href="#Broadcaster.subscribe-47"><span class="linenos">47</span></a>        <span class="p">)</span>
 </span></pre></div>
 
 
@@ -452,19 +468,19 @@
 
     </div>
     <a class="headerlink" href="#Broadcaster.async_broadcast"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Broadcaster.async_broadcast-44"><a href="#Broadcaster.async_broadcast-44"><span class="linenos">44</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-</span><span id="Broadcaster.async_broadcast-45"><a href="#Broadcaster.async_broadcast-45"><span class="linenos">45</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Broadcaster.async_broadcast-46"><a href="#Broadcaster.async_broadcast-46"><span class="linenos">46</span></a><span class="sd">        Broadcast data to a channel where all relevant clients will receive the data</span>
-</span><span id="Broadcaster.async_broadcast-47"><a href="#Broadcaster.async_broadcast-47"><span class="linenos">47</span></a><span class="sd">        and send it to the client</span>
-</span><span id="Broadcaster.async_broadcast-48"><a href="#Broadcaster.async_broadcast-48"><span class="linenos">48</span></a>
-</span><span id="Broadcaster.async_broadcast-49"><a href="#Broadcaster.async_broadcast-49"><span class="linenos">49</span></a><span class="sd">        Requires:</span>
-</span><span id="Broadcaster.async_broadcast-50"><a href="#Broadcaster.async_broadcast-50"><span class="linenos">50</span></a>
-</span><span id="Broadcaster.async_broadcast-51"><a href="#Broadcaster.async_broadcast-51"><span class="linenos">51</span></a><span class="sd">        - channel: str = The channel to broadcast the data to</span>
-</span><span id="Broadcaster.async_broadcast-52"><a href="#Broadcaster.async_broadcast-52"><span class="linenos">52</span></a><span class="sd">        - data: [dict|list] = The data to broadcast to the channel</span>
-</span><span id="Broadcaster.async_broadcast-53"><a href="#Broadcaster.async_broadcast-53"><span class="linenos">53</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
-</span><span id="Broadcaster.async_broadcast-54"><a href="#Broadcaster.async_broadcast-54"><span class="linenos">54</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Broadcaster.async_broadcast-55"><a href="#Broadcaster.async_broadcast-55"><span class="linenos">55</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__warn_on_not_usable__</span><span class="p">()</span>
-</span><span id="Broadcaster.async_broadcast-56"><a href="#Broadcaster.async_broadcast-56"><span class="linenos">56</span></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">channel</span><span class="p">),</span> <span class="n">data</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Broadcaster.async_broadcast-50"><a href="#Broadcaster.async_broadcast-50"><span class="linenos">50</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+</span><span id="Broadcaster.async_broadcast-51"><a href="#Broadcaster.async_broadcast-51"><span class="linenos">51</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Broadcaster.async_broadcast-52"><a href="#Broadcaster.async_broadcast-52"><span class="linenos">52</span></a><span class="sd">        Broadcast data to a channel where all relevant clients will receive the data</span>
+</span><span id="Broadcaster.async_broadcast-53"><a href="#Broadcaster.async_broadcast-53"><span class="linenos">53</span></a><span class="sd">        and send it to the client</span>
+</span><span id="Broadcaster.async_broadcast-54"><a href="#Broadcaster.async_broadcast-54"><span class="linenos">54</span></a>
+</span><span id="Broadcaster.async_broadcast-55"><a href="#Broadcaster.async_broadcast-55"><span class="linenos">55</span></a><span class="sd">        Requires:</span>
+</span><span id="Broadcaster.async_broadcast-56"><a href="#Broadcaster.async_broadcast-56"><span class="linenos">56</span></a>
+</span><span id="Broadcaster.async_broadcast-57"><a href="#Broadcaster.async_broadcast-57"><span class="linenos">57</span></a><span class="sd">        - channel: str = The channel to broadcast the data to</span>
+</span><span id="Broadcaster.async_broadcast-58"><a href="#Broadcaster.async_broadcast-58"><span class="linenos">58</span></a><span class="sd">        - data: [dict|list] = The data to broadcast to the channel</span>
+</span><span id="Broadcaster.async_broadcast-59"><a href="#Broadcaster.async_broadcast-59"><span class="linenos">59</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
+</span><span id="Broadcaster.async_broadcast-60"><a href="#Broadcaster.async_broadcast-60"><span class="linenos">60</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Broadcaster.async_broadcast-61"><a href="#Broadcaster.async_broadcast-61"><span class="linenos">61</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__warn_on_not_usable__</span><span class="p">()</span>
+</span><span id="Broadcaster.async_broadcast-62"><a href="#Broadcaster.async_broadcast-62"><span class="linenos">62</span></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">channel</span><span class="p">),</span> <span class="n">data</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -495,16 +511,16 @@ and send it to the client</p>
 
     </div>
     <a class="headerlink" href="#Broadcaster.async_subscribe"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Broadcaster.async_subscribe-58"><a href="#Broadcaster.async_subscribe-58"><span class="linenos">58</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="Broadcaster.async_subscribe-59"><a href="#Broadcaster.async_subscribe-59"><span class="linenos">59</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Broadcaster.async_subscribe-60"><a href="#Broadcaster.async_subscribe-60"><span class="linenos">60</span></a><span class="sd">        Subscribe to a channel to receive data from broadcasts</span>
-</span><span id="Broadcaster.async_subscribe-61"><a href="#Broadcaster.async_subscribe-61"><span class="linenos">61</span></a>
-</span><span id="Broadcaster.async_subscribe-62"><a href="#Broadcaster.async_subscribe-62"><span class="linenos">62</span></a><span class="sd">        Requires:</span>
-</span><span id="Broadcaster.async_subscribe-63"><a href="#Broadcaster.async_subscribe-63"><span class="linenos">63</span></a>
-</span><span id="Broadcaster.async_subscribe-64"><a href="#Broadcaster.async_subscribe-64"><span class="linenos">64</span></a><span class="sd">        - channel: str = The channel to subscribe to</span>
-</span><span id="Broadcaster.async_subscribe-65"><a href="#Broadcaster.async_subscribe-65"><span class="linenos">65</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Broadcaster.async_subscribe-66"><a href="#Broadcaster.async_subscribe-66"><span class="linenos">66</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__warn_on_not_usable__</span><span class="p">()</span>
-</span><span id="Broadcaster.async_subscribe-67"><a href="#Broadcaster.async_subscribe-67"><span class="linenos">67</span></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">channel</span><span class="p">))</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Broadcaster.async_subscribe-64"><a href="#Broadcaster.async_subscribe-64"><span class="linenos">64</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="Broadcaster.async_subscribe-65"><a href="#Broadcaster.async_subscribe-65"><span class="linenos">65</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Broadcaster.async_subscribe-66"><a href="#Broadcaster.async_subscribe-66"><span class="linenos">66</span></a><span class="sd">        Subscribe to a channel to receive data from broadcasts</span>
+</span><span id="Broadcaster.async_subscribe-67"><a href="#Broadcaster.async_subscribe-67"><span class="linenos">67</span></a>
+</span><span id="Broadcaster.async_subscribe-68"><a href="#Broadcaster.async_subscribe-68"><span class="linenos">68</span></a><span class="sd">        Requires:</span>
+</span><span id="Broadcaster.async_subscribe-69"><a href="#Broadcaster.async_subscribe-69"><span class="linenos">69</span></a>
+</span><span id="Broadcaster.async_subscribe-70"><a href="#Broadcaster.async_subscribe-70"><span class="linenos">70</span></a><span class="sd">        - channel: str = The channel to subscribe to</span>
+</span><span id="Broadcaster.async_subscribe-71"><a href="#Broadcaster.async_subscribe-71"><span class="linenos">71</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Broadcaster.async_subscribe-72"><a href="#Broadcaster.async_subscribe-72"><span class="linenos">72</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">__warn_on_not_usable__</span><span class="p">()</span>
+</span><span id="Broadcaster.async_subscribe-73"><a href="#Broadcaster.async_subscribe-73"><span class="linenos">73</span></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">channel</span><span class="p">))</span>
 </span></pre></div>
 
 
@@ -530,18 +546,18 @@ and send it to the client</p>
 
     </div>
     <a class="headerlink" href="#Broadcaster.async_receive_broadcast"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Broadcaster.async_receive_broadcast-69"><a href="#Broadcaster.async_receive_broadcast-69"><span class="linenos">69</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_receive_broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="Broadcaster.async_receive_broadcast-70"><a href="#Broadcaster.async_receive_broadcast-70"><span class="linenos">70</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Broadcaster.async_receive_broadcast-71"><a href="#Broadcaster.async_receive_broadcast-71"><span class="linenos">71</span></a><span class="sd">        Receive a broadcast from a channel that this socket server is subscribed to</span>
-</span><span id="Broadcaster.async_receive_broadcast-72"><a href="#Broadcaster.async_receive_broadcast-72"><span class="linenos">72</span></a>
-</span><span id="Broadcaster.async_receive_broadcast-73"><a href="#Broadcaster.async_receive_broadcast-73"><span class="linenos">73</span></a><span class="sd">        Returns:</span>
-</span><span id="Broadcaster.async_receive_broadcast-74"><a href="#Broadcaster.async_receive_broadcast-74"><span class="linenos">74</span></a>
-</span><span id="Broadcaster.async_receive_broadcast-75"><a href="#Broadcaster.async_receive_broadcast-75"><span class="linenos">75</span></a><span class="sd">        - channel: str = The channel that the data was broadcasted to</span>
-</span><span id="Broadcaster.async_receive_broadcast-76"><a href="#Broadcaster.async_receive_broadcast-76"><span class="linenos">76</span></a><span class="sd">        - data: [dict|list] = The data that was broadcasted to the channel</span>
-</span><span id="Broadcaster.async_receive_broadcast-77"><a href="#Broadcaster.async_receive_broadcast-77"><span class="linenos">77</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
-</span><span id="Broadcaster.async_receive_broadcast-78"><a href="#Broadcaster.async_receive_broadcast-78"><span class="linenos">78</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Broadcaster.async_receive_broadcast-79"><a href="#Broadcaster.async_receive_broadcast-79"><span class="linenos">79</span></a>        <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">receive</span><span class="p">()</span>
-</span><span id="Broadcaster.async_receive_broadcast-80"><a href="#Broadcaster.async_receive_broadcast-80"><span class="linenos">80</span></a>        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;channel&quot;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Broadcaster.async_receive_broadcast-75"><a href="#Broadcaster.async_receive_broadcast-75"><span class="linenos">75</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">async_receive_broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="Broadcaster.async_receive_broadcast-76"><a href="#Broadcaster.async_receive_broadcast-76"><span class="linenos">76</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Broadcaster.async_receive_broadcast-77"><a href="#Broadcaster.async_receive_broadcast-77"><span class="linenos">77</span></a><span class="sd">        Receive a broadcast from a channel that this socket server is subscribed to</span>
+</span><span id="Broadcaster.async_receive_broadcast-78"><a href="#Broadcaster.async_receive_broadcast-78"><span class="linenos">78</span></a>
+</span><span id="Broadcaster.async_receive_broadcast-79"><a href="#Broadcaster.async_receive_broadcast-79"><span class="linenos">79</span></a><span class="sd">        Returns:</span>
+</span><span id="Broadcaster.async_receive_broadcast-80"><a href="#Broadcaster.async_receive_broadcast-80"><span class="linenos">80</span></a>
+</span><span id="Broadcaster.async_receive_broadcast-81"><a href="#Broadcaster.async_receive_broadcast-81"><span class="linenos">81</span></a><span class="sd">        - channel: str = The channel that the data was broadcasted to</span>
+</span><span id="Broadcaster.async_receive_broadcast-82"><a href="#Broadcaster.async_receive_broadcast-82"><span class="linenos">82</span></a><span class="sd">        - data: [dict|list] = The data that was broadcasted to the channel</span>
+</span><span id="Broadcaster.async_receive_broadcast-83"><a href="#Broadcaster.async_receive_broadcast-83"><span class="linenos">83</span></a><span class="sd">            - Note: This data must be JSON serializable</span>
+</span><span id="Broadcaster.async_receive_broadcast-84"><a href="#Broadcaster.async_receive_broadcast-84"><span class="linenos">84</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Broadcaster.async_receive_broadcast-85"><a href="#Broadcaster.async_receive_broadcast-85"><span class="linenos">85</span></a>        <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">pubsub_layer</span><span class="o">.</span><span class="n">receive</span><span class="p">()</span>
+</span><span id="Broadcaster.async_receive_broadcast-86"><a href="#Broadcaster.async_receive_broadcast-86"><span class="linenos">86</span></a>        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;channel&quot;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
 </span></pre></div>
 
 

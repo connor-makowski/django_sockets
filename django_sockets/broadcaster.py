@@ -1,13 +1,19 @@
 import asyncio, logging
 
 from .pubsub import PubSubLayer
-from .utils import ensure_loop_running, get_config
+from .utils import ensure_loop_running
 
 logger = logging.getLogger(__name__)
 
 
 class Broadcaster:
-    def __init__(self, *args, loop=None, config=None, **kwargs):
+    def __init__(
+        self,
+        *args,
+        loop=None,
+        config={"hosts": [{"address": "redis://0.0.0.0:6379"}]},
+        **kwargs,
+    ):
         self.__loop__ = ensure_loop_running(loop)
         self.pubsub_layer = self.__get_pubsub_layer__(config=config)
         self.__usable__ = self.pubsub_layer is not None
@@ -79,11 +85,10 @@ class Broadcaster:
         return data["channel"], data["data"]
 
     # Internal Methods
-    def __get_pubsub_layer__(self, config=None):
+    def __get_pubsub_layer__(self, config: dict = dict()):
         """
-        A method to get the PubSubLayer given the settings.DJANGO_SOCKETS_CONFIG
+        A method to get the PubSubLayer given a configuration dictionary
         """
-        config = get_config(config)
         if "hosts" in config:
             return PubSubLayer(**config)
         return None

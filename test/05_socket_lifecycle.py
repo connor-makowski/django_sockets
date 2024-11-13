@@ -1,10 +1,6 @@
 from django_sockets.sockets import BaseSocketServer
 import asyncio, time
 
-DJANGO_SOCKETS_CONFIG = {
-    "hosts": [{"address": f"redis://0.0.0.0:6379"}],
-}
-
 CONNECTION_ACCEPTED = False
 CONNECT_FN_CALLED = False
 RECEIVE_FN_CALLED = False

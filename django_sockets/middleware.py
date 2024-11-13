@@ -1,4 +1,8 @@
 from .utils import database_sync_to_async
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def get_anonymous_user_obj():
     try:
@@ -7,11 +11,17 @@ def get_anonymous_user_obj():
         pass
     try:
         from django.contrib.auth.models import AnonymousUser
+
         return AnonymousUser()
     except:
         pass
+    logger.log(
+        logging.ERROR,
+        "Unable to get AnonymousUser object. Check to make sure Django is properly installed before using this middleware.",
+    )
     return None
-    
+
+
 def get_drf_token_obj():
     try:
         return Token
@@ -19,10 +29,16 @@ def get_drf_token_obj():
         pass
     try:
         from rest_framework.authtoken.models import Token
+
         return Token
     except:
         pass
+    logger.log(
+        logging.ERROR,
+        "Unable to get Token object. Check to make sure Django Rest Framework is properly installed before using this middleware.",
+    )
     return None
+
 
 @database_sync_to_async
 def get_drf_user(user_token):

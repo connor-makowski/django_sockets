@@ -34,12 +34,6 @@
                     <a class="variable" href="#logger">logger</a>
             </li>
             <li>
-                    <a class="function" href="#get_django_settings">get_django_settings</a>
-            </li>
-            <li>
-                    <a class="function" href="#get_config">get_config</a>
-            </li>
-            <li>
                     <a class="function" href="#run_in_thread">run_in_thread</a>
             </li>
             <li>
@@ -90,8 +84,8 @@
 <footer>
 <select id="version-selector">
     <option value="latest">latest</option>
+        <option value="1.1.0">1.1.0</option>
         <option value="1.0.0">1.0.0</option>
-        <option value=""></option>
 </select>
 <script>
     // Set the currently selected option to be equivalent to that of the url version.
@@ -144,211 +138,180 @@
 </span><span id="L-8"><a href="#L-8"><span class="linenos">  8</span></a>
 </span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 </span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a>
-</span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a><span class="k">def</span> <span class="nf">get_django_settings</span><span class="p">():</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a><span class="sd">    Get the Django settings</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a>    <span class="k">try</span><span class="p">:</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a>        <span class="k">return</span> <span class="n">settings</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos"> 17</span></a>    <span class="k">except</span><span class="p">:</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos"> 18</span></a>        <span class="k">pass</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos"> 19</span></a>    <span class="k">try</span><span class="p">:</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a>        <span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos"> 21</span></a>        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">configured</span><span class="p">:</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos"> 22</span></a>            <span class="k">return</span> <span class="n">settings</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a>    <span class="k">except</span><span class="p">:</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos"> 24</span></a>        <span class="k">pass</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a>    <span class="k">return</span> <span class="kc">None</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a>
-</span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a>
-</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a><span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a><span class="sd">    Get the configuration for the socket server</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a>    <span class="c1"># If the config is passed, return it.</span>
-</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a>    <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a>        <span class="k">return</span> <span class="n">config</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a>    <span class="c1"># If the config is not passed, try to get it from the Django settings</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a>    <span class="n">django_settings</span> <span class="o">=</span> <span class="n">get_django_settings</span><span class="p">()</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a>    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">django_settings</span><span class="p">,</span> <span class="s2">&quot;DJANGO_SOCKETS_CONFIG&quot;</span><span class="p">):</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a>        <span class="k">return</span> <span class="n">django_settings</span><span class="o">.</span><span class="n">DJANGO_SOCKETS_CONFIG</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a>    <span class="c1"># If nothing has been returned yet, return a default configuration</span>
-</span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;hosts&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="s2">&quot;redis://0.0.0.0:6379&quot;</span><span class="p">}]}</span>
-</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a>
-</span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a>
-</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a><span class="k">def</span> <span class="nf">run_in_thread</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a><span class="sd">    Takes in a synchronous command along with args and kwargs and runs it in a background</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a><span class="sd">    thread that is not tied to the websocket connection.</span>
-</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a>
-</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a><span class="sd">    This will be terminated when the larger daphne server is terminated</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a>    <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
-</span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a>        <span class="n">target</span><span class="o">=</span><span class="n">command</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span>
-</span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a>    <span class="p">)</span>
-</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a>    <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a>    <span class="k">return</span> <span class="n">thread</span>
-</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a>
+</span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a>
+</span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a><span class="k">def</span> <span class="nf">run_in_thread</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a><span class="sd">    Takes in a synchronous command along with args and kwargs and runs it in a background</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a><span class="sd">    thread that is not tied to the websocket connection.</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a>
+</span><span id="L-17"><a href="#L-17"><span class="linenos"> 17</span></a><span class="sd">    This will be terminated when the larger daphne server is terminated</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos"> 18</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos"> 19</span></a>    <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a>        <span class="n">target</span><span class="o">=</span><span class="n">command</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos"> 21</span></a>    <span class="p">)</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos"> 22</span></a>    <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a>    <span class="k">return</span> <span class="n">thread</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos"> 24</span></a>
+</span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a>
+</span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a><span class="k">def</span> <span class="nf">start_event_loop_thread</span><span class="p">(</span><span class="n">loop</span><span class="p">):</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a><span class="sd">    Starts the event loop in a new thread</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a>    <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a>    <span class="n">loop</span><span class="o">.</span><span class="n">run_forever</span><span class="p">()</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a>
+</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a>
+</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a><span class="k">def</span> <span class="nf">ensure_loop_running</span><span class="p">(</span><span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a><span class="sd">    Starts the event loop in a new thread and returns the thread</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a>    <span class="n">loop</span> <span class="o">=</span> <span class="n">loop</span> <span class="k">if</span> <span class="n">loop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">loop</span><span class="o">.</span><span class="n">is_running</span><span class="p">():</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a>            <span class="n">thread</span> <span class="o">=</span> <span class="n">run_in_thread</span><span class="p">(</span><span class="n">start_event_loop_thread</span><span class="p">,</span> <span class="n">loop</span><span class="p">)</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a>        <span class="k">except</span><span class="p">:</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a>            <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s2">&quot;Event Loop already running&quot;</span><span class="p">)</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a>    <span class="k">return</span> <span class="n">loop</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a>
+</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a>
+</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a><span class="c1"># The following code is copied directly from Django Channels (channels/db.py)</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a><span class="c1"># Begin Code Copy:</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a><span class="c1">################################################################################</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a>
+</span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a>
+</span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a><span class="k">class</span> <span class="nc">DatabaseSyncToAsync</span><span class="p">(</span><span class="n">SyncToAsync</span><span class="p">):</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a><span class="sd">    SyncToAsync version that cleans up old database connections when it exits.</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a><span class="sd">    &quot;&quot;&quot;</span>
 </span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a>
-</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a><span class="k">def</span> <span class="nf">start_event_loop_thread</span><span class="p">(</span><span class="n">loop</span><span class="p">):</span>
-</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a><span class="sd">    Starts the event loop in a new thread</span>
-</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a>    <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
-</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a>    <span class="n">loop</span><span class="o">.</span><span class="n">run_forever</span><span class="p">()</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a>    <span class="k">def</span> <span class="nf">thread_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a>        <span class="n">close_old_connections</span><span class="p">()</span>
+</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a>            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">thread_handler</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a>        <span class="k">finally</span><span class="p">:</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a>            <span class="n">close_old_connections</span><span class="p">()</span>
 </span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a>
 </span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a>
-</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a><span class="k">def</span> <span class="nf">ensure_loop_running</span><span class="p">(</span><span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a><span class="sd">    Starts the event loop in a new thread and returns the thread</span>
-</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a>    <span class="n">loop</span> <span class="o">=</span> <span class="n">loop</span> <span class="k">if</span> <span class="n">loop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
-</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">loop</span><span class="o">.</span><span class="n">is_running</span><span class="p">():</span>
-</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a>            <span class="n">thread</span> <span class="o">=</span> <span class="n">run_in_thread</span><span class="p">(</span><span class="n">start_event_loop_thread</span><span class="p">,</span> <span class="n">loop</span><span class="p">)</span>
-</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a>        <span class="k">except</span><span class="p">:</span>
-</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a>            <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s2">&quot;Event Loop already running&quot;</span><span class="p">)</span>
-</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a>    <span class="k">return</span> <span class="n">loop</span>
-</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a>
-</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a>
-</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a><span class="c1"># The following code is copied directly from Django Channels (channels/db.py)</span>
-</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a><span class="c1"># Begin Code Copy:</span>
-</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a><span class="c1">################################################################################</span>
-</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a>
+</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a><span class="c1"># The class is TitleCased, but we want to encourage use as a callable/decorator</span>
+</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a><span class="n">database_sync_to_async</span> <span class="o">=</span> <span class="n">DatabaseSyncToAsync</span>
+</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a><span class="c1">################################################################################</span>
+</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a><span class="c1"># End Code Copy:</span>
+</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a>
+</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a>
+</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a><span class="c1"># The following code is copied directly from Django Channels (channels/routing.py)</span>
+</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a><span class="c1"># Begin Code Copy:</span>
+</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a><span class="c1">################################################################################</span>
+</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a><span class="k">class</span> <span class="nc">ProtocolTypeRouter</span><span class="p">:</span>
+</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a><span class="sd">    Takes a mapping of protocol type names to other Application instances,</span>
+</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a><span class="sd">    and dispatches to the right one based on protocol name (or raises an error)</span>
+</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a>
+</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">application_mapping</span><span class="p">):</span>
+</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">application_mapping</span> <span class="o">=</span> <span class="n">application_mapping</span>
 </span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a>
-</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a><span class="k">class</span> <span class="nc">DatabaseSyncToAsync</span><span class="p">(</span><span class="n">SyncToAsync</span><span class="p">):</span>
-</span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a><span class="sd">    SyncToAsync version that cleans up old database connections when it exits.</span>
-</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a>
-</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a>    <span class="k">def</span> <span class="nf">thread_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a>        <span class="n">close_old_connections</span><span class="p">()</span>
-</span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a>            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">thread_handler</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a>        <span class="k">finally</span><span class="p">:</span>
-</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a>            <span class="n">close_old_connections</span><span class="p">()</span>
-</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a>
-</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a>
-</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a><span class="c1"># The class is TitleCased, but we want to encourage use as a callable/decorator</span>
-</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a><span class="n">database_sync_to_async</span> <span class="o">=</span> <span class="n">DatabaseSyncToAsync</span>
-</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a><span class="c1">################################################################################</span>
-</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a><span class="c1"># End Code Copy:</span>
-</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a>
+</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">):</span>
+</span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a>        <span class="k">if</span> <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">application_mapping</span><span class="p">:</span>
+</span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a>            <span class="n">application</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">application_mapping</span><span class="p">[</span><span class="n">scope</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]]</span>
+</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a>            <span class="k">return</span> <span class="k">await</span> <span class="n">application</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">)</span>
+</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a>                <span class="s2">&quot;No application configured for scope type </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+</span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a>            <span class="p">)</span>
+</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a>
+</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a>
+</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a><span class="k">class</span> <span class="nc">URLRouter</span><span class="p">:</span>
+</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a><span class="sd">    Routes to different applications/consumers based on the URL path.</span>
+</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a>
+</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a><span class="sd">    Works with anything that has a ``path`` key, but intended for WebSocket</span>
+</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a><span class="sd">    and HTTP. Uses Django&#39;s django.urls objects for resolution -</span>
+</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a><span class="sd">    path() or re_path().</span>
+</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a><span class="sd">    &quot;&quot;&quot;</span>
 </span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a>
-</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a><span class="c1"># The following code is copied directly from Django Channels (channels/routing.py)</span>
-</span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a><span class="c1"># Begin Code Copy:</span>
-</span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a><span class="c1">################################################################################</span>
-</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a><span class="k">class</span> <span class="nc">ProtocolTypeRouter</span><span class="p">:</span>
-</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a><span class="sd">    Takes a mapping of protocol type names to other Application instances,</span>
-</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a><span class="sd">    and dispatches to the right one based on protocol name (or raises an error)</span>
-</span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a>
-</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">application_mapping</span><span class="p">):</span>
-</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">application_mapping</span> <span class="o">=</span> <span class="n">application_mapping</span>
-</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a>
-</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">):</span>
-</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a>        <span class="k">if</span> <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">application_mapping</span><span class="p">:</span>
-</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a>            <span class="n">application</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">application_mapping</span><span class="p">[</span><span class="n">scope</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]]</span>
-</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a>            <span class="k">return</span> <span class="k">await</span> <span class="n">application</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">)</span>
-</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a>                <span class="s2">&quot;No application configured for scope type </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
-</span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a>            <span class="p">)</span>
-</span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a>
-</span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a>
-</span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a><span class="k">class</span> <span class="nc">URLRouter</span><span class="p">:</span>
-</span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-126"><a href="#L-126"><span class="linenos">126</span></a><span class="sd">    Routes to different applications/consumers based on the URL path.</span>
-</span><span id="L-127"><a href="#L-127"><span class="linenos">127</span></a>
-</span><span id="L-128"><a href="#L-128"><span class="linenos">128</span></a><span class="sd">    Works with anything that has a ``path`` key, but intended for WebSocket</span>
-</span><span id="L-129"><a href="#L-129"><span class="linenos">129</span></a><span class="sd">    and HTTP. Uses Django&#39;s django.urls objects for resolution -</span>
-</span><span id="L-130"><a href="#L-130"><span class="linenos">130</span></a><span class="sd">    path() or re_path().</span>
-</span><span id="L-131"><a href="#L-131"><span class="linenos">131</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a>    <span class="c1">#: This router wants to do routing based on scope[path] or</span>
+</span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a>    <span class="c1">#: scope[path_remaining]. ``path()`` entries in URLRouter should not be</span>
+</span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a>    <span class="c1">#: treated as endpoints (ended with ``$``), but similar to ``include()``.</span>
+</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a>    <span class="n">_path_routing</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a>
+</span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routes</span><span class="p">):</span>
+</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">routes</span> <span class="o">=</span> <span class="n">routes</span>
+</span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a>
+</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a>        <span class="k">for</span> <span class="n">route</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routes</span><span class="p">:</span>
+</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a>            <span class="c1"># The inner ASGI app wants to do additional routing, route</span>
+</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a>            <span class="c1"># must not be an endpoint</span>
+</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a>            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">callback</span><span class="p">,</span> <span class="s2">&quot;_path_routing&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a>                <span class="n">pattern</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">pattern</span>
+</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a>                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">RegexPattern</span><span class="p">):</span>
+</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a>                    <span class="n">arg</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">_regex</span>
+</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a>                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">RoutePattern</span><span class="p">):</span>
+</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a>                    <span class="n">arg</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">_route</span>
+</span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a>                <span class="k">else</span><span class="p">:</span>
+</span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a>                        <span class="sa">f</span><span class="s2">&quot;Unsupported pattern type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a>                    <span class="p">)</span>
+</span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a>                <span class="n">route</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span>
+</span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a>                    <span class="n">arg</span><span class="p">,</span> <span class="n">pattern</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">is_endpoint</span><span class="o">=</span><span class="kc">False</span>
+</span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a>                <span class="p">)</span>
+</span><span id="L-126"><a href="#L-126"><span class="linenos">126</span></a>
+</span><span id="L-127"><a href="#L-127"><span class="linenos">127</span></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">route</span><span class="o">.</span><span class="n">callback</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">route</span><span class="p">,</span> <span class="n">URLResolver</span><span class="p">):</span>
+</span><span id="L-128"><a href="#L-128"><span class="linenos">128</span></a>                <span class="k">raise</span> <span class="n">ImproperlyConfigured</span><span class="p">(</span>
+</span><span id="L-129"><a href="#L-129"><span class="linenos">129</span></a>                    <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: include() is not supported in URLRouter. Use nested&quot;</span>
+</span><span id="L-130"><a href="#L-130"><span class="linenos">130</span></a>                    <span class="s2">&quot; URLRouter instances instead.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">route</span><span class="p">,)</span>
+</span><span id="L-131"><a href="#L-131"><span class="linenos">131</span></a>                <span class="p">)</span>
 </span><span id="L-132"><a href="#L-132"><span class="linenos">132</span></a>
-</span><span id="L-133"><a href="#L-133"><span class="linenos">133</span></a>    <span class="c1">#: This router wants to do routing based on scope[path] or</span>
-</span><span id="L-134"><a href="#L-134"><span class="linenos">134</span></a>    <span class="c1">#: scope[path_remaining]. ``path()`` entries in URLRouter should not be</span>
-</span><span id="L-135"><a href="#L-135"><span class="linenos">135</span></a>    <span class="c1">#: treated as endpoints (ended with ``$``), but similar to ``include()``.</span>
-</span><span id="L-136"><a href="#L-136"><span class="linenos">136</span></a>    <span class="n">_path_routing</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span id="L-137"><a href="#L-137"><span class="linenos">137</span></a>
-</span><span id="L-138"><a href="#L-138"><span class="linenos">138</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routes</span><span class="p">):</span>
-</span><span id="L-139"><a href="#L-139"><span class="linenos">139</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">routes</span> <span class="o">=</span> <span class="n">routes</span>
+</span><span id="L-133"><a href="#L-133"><span class="linenos">133</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">):</span>
+</span><span id="L-134"><a href="#L-134"><span class="linenos">134</span></a>        <span class="c1"># Get the path</span>
+</span><span id="L-135"><a href="#L-135"><span class="linenos">135</span></a>        <span class="n">path</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path_remaining&quot;</span><span class="p">,</span> <span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+</span><span id="L-136"><a href="#L-136"><span class="linenos">136</span></a>        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-137"><a href="#L-137"><span class="linenos">137</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="L-138"><a href="#L-138"><span class="linenos">138</span></a>                <span class="s2">&quot;No &#39;path&#39; key in connection scope, cannot route URLs&quot;</span>
+</span><span id="L-139"><a href="#L-139"><span class="linenos">139</span></a>            <span class="p">)</span>
 </span><span id="L-140"><a href="#L-140"><span class="linenos">140</span></a>
-</span><span id="L-141"><a href="#L-141"><span class="linenos">141</span></a>        <span class="k">for</span> <span class="n">route</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routes</span><span class="p">:</span>
-</span><span id="L-142"><a href="#L-142"><span class="linenos">142</span></a>            <span class="c1"># The inner ASGI app wants to do additional routing, route</span>
-</span><span id="L-143"><a href="#L-143"><span class="linenos">143</span></a>            <span class="c1"># must not be an endpoint</span>
-</span><span id="L-144"><a href="#L-144"><span class="linenos">144</span></a>            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">callback</span><span class="p">,</span> <span class="s2">&quot;_path_routing&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-</span><span id="L-145"><a href="#L-145"><span class="linenos">145</span></a>                <span class="n">pattern</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">pattern</span>
-</span><span id="L-146"><a href="#L-146"><span class="linenos">146</span></a>                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">RegexPattern</span><span class="p">):</span>
-</span><span id="L-147"><a href="#L-147"><span class="linenos">147</span></a>                    <span class="n">arg</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">_regex</span>
-</span><span id="L-148"><a href="#L-148"><span class="linenos">148</span></a>                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">RoutePattern</span><span class="p">):</span>
-</span><span id="L-149"><a href="#L-149"><span class="linenos">149</span></a>                    <span class="n">arg</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">_route</span>
-</span><span id="L-150"><a href="#L-150"><span class="linenos">150</span></a>                <span class="k">else</span><span class="p">:</span>
-</span><span id="L-151"><a href="#L-151"><span class="linenos">151</span></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span id="L-152"><a href="#L-152"><span class="linenos">152</span></a>                        <span class="sa">f</span><span class="s2">&quot;Unsupported pattern type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="L-153"><a href="#L-153"><span class="linenos">153</span></a>                    <span class="p">)</span>
-</span><span id="L-154"><a href="#L-154"><span class="linenos">154</span></a>                <span class="n">route</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span>
-</span><span id="L-155"><a href="#L-155"><span class="linenos">155</span></a>                    <span class="n">arg</span><span class="p">,</span> <span class="n">pattern</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">is_endpoint</span><span class="o">=</span><span class="kc">False</span>
-</span><span id="L-156"><a href="#L-156"><span class="linenos">156</span></a>                <span class="p">)</span>
-</span><span id="L-157"><a href="#L-157"><span class="linenos">157</span></a>
-</span><span id="L-158"><a href="#L-158"><span class="linenos">158</span></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">route</span><span class="o">.</span><span class="n">callback</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">route</span><span class="p">,</span> <span class="n">URLResolver</span><span class="p">):</span>
-</span><span id="L-159"><a href="#L-159"><span class="linenos">159</span></a>                <span class="k">raise</span> <span class="n">ImproperlyConfigured</span><span class="p">(</span>
-</span><span id="L-160"><a href="#L-160"><span class="linenos">160</span></a>                    <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: include() is not supported in URLRouter. Use nested&quot;</span>
-</span><span id="L-161"><a href="#L-161"><span class="linenos">161</span></a>                    <span class="s2">&quot; URLRouter instances instead.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">route</span><span class="p">,)</span>
-</span><span id="L-162"><a href="#L-162"><span class="linenos">162</span></a>                <span class="p">)</span>
-</span><span id="L-163"><a href="#L-163"><span class="linenos">163</span></a>
-</span><span id="L-164"><a href="#L-164"><span class="linenos">164</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">):</span>
-</span><span id="L-165"><a href="#L-165"><span class="linenos">165</span></a>        <span class="c1"># Get the path</span>
-</span><span id="L-166"><a href="#L-166"><span class="linenos">166</span></a>        <span class="n">path</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path_remaining&quot;</span><span class="p">,</span> <span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
-</span><span id="L-167"><a href="#L-167"><span class="linenos">167</span></a>        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="L-168"><a href="#L-168"><span class="linenos">168</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span id="L-169"><a href="#L-169"><span class="linenos">169</span></a>                <span class="s2">&quot;No &#39;path&#39; key in connection scope, cannot route URLs&quot;</span>
-</span><span id="L-170"><a href="#L-170"><span class="linenos">170</span></a>            <span class="p">)</span>
-</span><span id="L-171"><a href="#L-171"><span class="linenos">171</span></a>
-</span><span id="L-172"><a href="#L-172"><span class="linenos">172</span></a>        <span class="k">if</span> <span class="s2">&quot;path_remaining&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">scope</span><span class="p">:</span>
-</span><span id="L-173"><a href="#L-173"><span class="linenos">173</span></a>            <span class="c1"># We are the outermost URLRouter, so handle root_path if present.</span>
-</span><span id="L-174"><a href="#L-174"><span class="linenos">174</span></a>            <span class="n">root_path</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;root_path&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-</span><span id="L-175"><a href="#L-175"><span class="linenos">175</span></a>            <span class="k">if</span> <span class="n">root_path</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">root_path</span><span class="p">):</span>
-</span><span id="L-176"><a href="#L-176"><span class="linenos">176</span></a>                <span class="c1"># If root_path is present, path must start with it.</span>
-</span><span id="L-177"><a href="#L-177"><span class="linenos">177</span></a>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No route found for path </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
-</span><span id="L-178"><a href="#L-178"><span class="linenos">178</span></a>            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">root_path</span><span class="p">)</span> <span class="p">:]</span>
-</span><span id="L-179"><a href="#L-179"><span class="linenos">179</span></a>
-</span><span id="L-180"><a href="#L-180"><span class="linenos">180</span></a>        <span class="c1"># Remove leading / to match Django&#39;s handling</span>
-</span><span id="L-181"><a href="#L-181"><span class="linenos">181</span></a>        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
-</span><span id="L-182"><a href="#L-182"><span class="linenos">182</span></a>        <span class="c1"># Run through the routes we have until one matches</span>
-</span><span id="L-183"><a href="#L-183"><span class="linenos">183</span></a>        <span class="k">for</span> <span class="n">route</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routes</span><span class="p">:</span>
-</span><span id="L-184"><a href="#L-184"><span class="linenos">184</span></a>            <span class="k">try</span><span class="p">:</span>
-</span><span id="L-185"><a href="#L-185"><span class="linenos">185</span></a>                <span class="n">match</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span id="L-186"><a href="#L-186"><span class="linenos">186</span></a>                <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
-</span><span id="L-187"><a href="#L-187"><span class="linenos">187</span></a>                    <span class="n">new_path</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span> <span class="o">=</span> <span class="n">match</span>
-</span><span id="L-188"><a href="#L-188"><span class="linenos">188</span></a>                    <span class="c1"># Add defaults to kwargs from the URL pattern.</span>
-</span><span id="L-189"><a href="#L-189"><span class="linenos">189</span></a>                    <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">default_args</span><span class="p">)</span>
-</span><span id="L-190"><a href="#L-190"><span class="linenos">190</span></a>                    <span class="c1"># Add args or kwargs into the scope</span>
-</span><span id="L-191"><a href="#L-191"><span class="linenos">191</span></a>                    <span class="n">outer</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;url_route&quot;</span><span class="p">,</span> <span class="p">{})</span>
-</span><span id="L-192"><a href="#L-192"><span class="linenos">192</span></a>                    <span class="n">application</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">callback</span>
-</span><span id="L-193"><a href="#L-193"><span class="linenos">193</span></a>                    <span class="k">return</span> <span class="k">await</span> <span class="n">application</span><span class="p">(</span>
-</span><span id="L-194"><a href="#L-194"><span class="linenos">194</span></a>                        <span class="nb">dict</span><span class="p">(</span>
-</span><span id="L-195"><a href="#L-195"><span class="linenos">195</span></a>                            <span class="n">scope</span><span class="p">,</span>
-</span><span id="L-196"><a href="#L-196"><span class="linenos">196</span></a>                            <span class="n">path_remaining</span><span class="o">=</span><span class="n">new_path</span><span class="p">,</span>
-</span><span id="L-197"><a href="#L-197"><span class="linenos">197</span></a>                            <span class="n">url_route</span><span class="o">=</span><span class="p">{</span>
-</span><span id="L-198"><a href="#L-198"><span class="linenos">198</span></a>                                <span class="s2">&quot;args&quot;</span><span class="p">:</span> <span class="n">outer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;args&quot;</span><span class="p">,</span> <span class="p">())</span> <span class="o">+</span> <span class="n">args</span><span class="p">,</span>
-</span><span id="L-199"><a href="#L-199"><span class="linenos">199</span></a>                                <span class="s2">&quot;kwargs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="o">**</span><span class="n">outer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;kwargs&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">},</span>
-</span><span id="L-200"><a href="#L-200"><span class="linenos">200</span></a>                            <span class="p">},</span>
-</span><span id="L-201"><a href="#L-201"><span class="linenos">201</span></a>                        <span class="p">),</span>
-</span><span id="L-202"><a href="#L-202"><span class="linenos">202</span></a>                        <span class="n">receive</span><span class="p">,</span>
-</span><span id="L-203"><a href="#L-203"><span class="linenos">203</span></a>                        <span class="n">send</span><span class="p">,</span>
-</span><span id="L-204"><a href="#L-204"><span class="linenos">204</span></a>                    <span class="p">)</span>
-</span><span id="L-205"><a href="#L-205"><span class="linenos">205</span></a>            <span class="k">except</span> <span class="n">Resolver404</span><span class="p">:</span>
-</span><span id="L-206"><a href="#L-206"><span class="linenos">206</span></a>                <span class="k">pass</span>
-</span><span id="L-207"><a href="#L-207"><span class="linenos">207</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="L-208"><a href="#L-208"><span class="linenos">208</span></a>            <span class="k">if</span> <span class="s2">&quot;path_remaining&quot;</span> <span class="ow">in</span> <span class="n">scope</span><span class="p">:</span>
-</span><span id="L-209"><a href="#L-209"><span class="linenos">209</span></a>                <span class="k">raise</span> <span class="n">Resolver404</span><span class="p">(</span><span class="s2">&quot;No route found for path </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
-</span><span id="L-210"><a href="#L-210"><span class="linenos">210</span></a>            <span class="c1"># We are the outermost URLRouter</span>
-</span><span id="L-211"><a href="#L-211"><span class="linenos">211</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No route found for path </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
-</span><span id="L-212"><a href="#L-212"><span class="linenos">212</span></a>
-</span><span id="L-213"><a href="#L-213"><span class="linenos">213</span></a>
-</span><span id="L-214"><a href="#L-214"><span class="linenos">214</span></a><span class="c1">################################################################################</span>
-</span><span id="L-215"><a href="#L-215"><span class="linenos">215</span></a><span class="c1"># End Code Copy:</span>
+</span><span id="L-141"><a href="#L-141"><span class="linenos">141</span></a>        <span class="k">if</span> <span class="s2">&quot;path_remaining&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">scope</span><span class="p">:</span>
+</span><span id="L-142"><a href="#L-142"><span class="linenos">142</span></a>            <span class="c1"># We are the outermost URLRouter, so handle root_path if present.</span>
+</span><span id="L-143"><a href="#L-143"><span class="linenos">143</span></a>            <span class="n">root_path</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;root_path&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+</span><span id="L-144"><a href="#L-144"><span class="linenos">144</span></a>            <span class="k">if</span> <span class="n">root_path</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">root_path</span><span class="p">):</span>
+</span><span id="L-145"><a href="#L-145"><span class="linenos">145</span></a>                <span class="c1"># If root_path is present, path must start with it.</span>
+</span><span id="L-146"><a href="#L-146"><span class="linenos">146</span></a>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No route found for path </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+</span><span id="L-147"><a href="#L-147"><span class="linenos">147</span></a>            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">root_path</span><span class="p">)</span> <span class="p">:]</span>
+</span><span id="L-148"><a href="#L-148"><span class="linenos">148</span></a>
+</span><span id="L-149"><a href="#L-149"><span class="linenos">149</span></a>        <span class="c1"># Remove leading / to match Django&#39;s handling</span>
+</span><span id="L-150"><a href="#L-150"><span class="linenos">150</span></a>        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+</span><span id="L-151"><a href="#L-151"><span class="linenos">151</span></a>        <span class="c1"># Run through the routes we have until one matches</span>
+</span><span id="L-152"><a href="#L-152"><span class="linenos">152</span></a>        <span class="k">for</span> <span class="n">route</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routes</span><span class="p">:</span>
+</span><span id="L-153"><a href="#L-153"><span class="linenos">153</span></a>            <span class="k">try</span><span class="p">:</span>
+</span><span id="L-154"><a href="#L-154"><span class="linenos">154</span></a>                <span class="n">match</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span id="L-155"><a href="#L-155"><span class="linenos">155</span></a>                <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+</span><span id="L-156"><a href="#L-156"><span class="linenos">156</span></a>                    <span class="n">new_path</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span> <span class="o">=</span> <span class="n">match</span>
+</span><span id="L-157"><a href="#L-157"><span class="linenos">157</span></a>                    <span class="c1"># Add defaults to kwargs from the URL pattern.</span>
+</span><span id="L-158"><a href="#L-158"><span class="linenos">158</span></a>                    <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">default_args</span><span class="p">)</span>
+</span><span id="L-159"><a href="#L-159"><span class="linenos">159</span></a>                    <span class="c1"># Add args or kwargs into the scope</span>
+</span><span id="L-160"><a href="#L-160"><span class="linenos">160</span></a>                    <span class="n">outer</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;url_route&quot;</span><span class="p">,</span> <span class="p">{})</span>
+</span><span id="L-161"><a href="#L-161"><span class="linenos">161</span></a>                    <span class="n">application</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">callback</span>
+</span><span id="L-162"><a href="#L-162"><span class="linenos">162</span></a>                    <span class="k">return</span> <span class="k">await</span> <span class="n">application</span><span class="p">(</span>
+</span><span id="L-163"><a href="#L-163"><span class="linenos">163</span></a>                        <span class="nb">dict</span><span class="p">(</span>
+</span><span id="L-164"><a href="#L-164"><span class="linenos">164</span></a>                            <span class="n">scope</span><span class="p">,</span>
+</span><span id="L-165"><a href="#L-165"><span class="linenos">165</span></a>                            <span class="n">path_remaining</span><span class="o">=</span><span class="n">new_path</span><span class="p">,</span>
+</span><span id="L-166"><a href="#L-166"><span class="linenos">166</span></a>                            <span class="n">url_route</span><span class="o">=</span><span class="p">{</span>
+</span><span id="L-167"><a href="#L-167"><span class="linenos">167</span></a>                                <span class="s2">&quot;args&quot;</span><span class="p">:</span> <span class="n">outer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;args&quot;</span><span class="p">,</span> <span class="p">())</span> <span class="o">+</span> <span class="n">args</span><span class="p">,</span>
+</span><span id="L-168"><a href="#L-168"><span class="linenos">168</span></a>                                <span class="s2">&quot;kwargs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="o">**</span><span class="n">outer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;kwargs&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">},</span>
+</span><span id="L-169"><a href="#L-169"><span class="linenos">169</span></a>                            <span class="p">},</span>
+</span><span id="L-170"><a href="#L-170"><span class="linenos">170</span></a>                        <span class="p">),</span>
+</span><span id="L-171"><a href="#L-171"><span class="linenos">171</span></a>                        <span class="n">receive</span><span class="p">,</span>
+</span><span id="L-172"><a href="#L-172"><span class="linenos">172</span></a>                        <span class="n">send</span><span class="p">,</span>
+</span><span id="L-173"><a href="#L-173"><span class="linenos">173</span></a>                    <span class="p">)</span>
+</span><span id="L-174"><a href="#L-174"><span class="linenos">174</span></a>            <span class="k">except</span> <span class="n">Resolver404</span><span class="p">:</span>
+</span><span id="L-175"><a href="#L-175"><span class="linenos">175</span></a>                <span class="k">pass</span>
+</span><span id="L-176"><a href="#L-176"><span class="linenos">176</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="L-177"><a href="#L-177"><span class="linenos">177</span></a>            <span class="k">if</span> <span class="s2">&quot;path_remaining&quot;</span> <span class="ow">in</span> <span class="n">scope</span><span class="p">:</span>
+</span><span id="L-178"><a href="#L-178"><span class="linenos">178</span></a>                <span class="k">raise</span> <span class="n">Resolver404</span><span class="p">(</span><span class="s2">&quot;No route found for path </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+</span><span id="L-179"><a href="#L-179"><span class="linenos">179</span></a>            <span class="c1"># We are the outermost URLRouter</span>
+</span><span id="L-180"><a href="#L-180"><span class="linenos">180</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No route found for path </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+</span><span id="L-181"><a href="#L-181"><span class="linenos">181</span></a>
+</span><span id="L-182"><a href="#L-182"><span class="linenos">182</span></a>
+</span><span id="L-183"><a href="#L-183"><span class="linenos">183</span></a><span class="c1">################################################################################</span>
+</span><span id="L-184"><a href="#L-184"><span class="linenos">184</span></a><span class="c1"># End Code Copy:</span>
 </span></pre></div>
 
 
@@ -365,72 +328,6 @@
     
 
                 </section>
-                <section id="get_django_settings">
-                            <input id="get_django_settings-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
-<div class="attr function">
-            
-        <span class="def">def</span>
-        <span class="name">get_django_settings</span><span class="signature pdoc-code condensed">(<span class="return-annotation">):</span></span>
-
-                <label class="view-source-button" for="get_django_settings-view-source"><span>View Source</span></label>
-
-    </div>
-    <a class="headerlink" href="#get_django_settings"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="get_django_settings-12"><a href="#get_django_settings-12"><span class="linenos">12</span></a><span class="k">def</span> <span class="nf">get_django_settings</span><span class="p">():</span>
-</span><span id="get_django_settings-13"><a href="#get_django_settings-13"><span class="linenos">13</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="get_django_settings-14"><a href="#get_django_settings-14"><span class="linenos">14</span></a><span class="sd">    Get the Django settings</span>
-</span><span id="get_django_settings-15"><a href="#get_django_settings-15"><span class="linenos">15</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="get_django_settings-16"><a href="#get_django_settings-16"><span class="linenos">16</span></a>    <span class="k">try</span><span class="p">:</span>
-</span><span id="get_django_settings-17"><a href="#get_django_settings-17"><span class="linenos">17</span></a>        <span class="k">return</span> <span class="n">settings</span>
-</span><span id="get_django_settings-18"><a href="#get_django_settings-18"><span class="linenos">18</span></a>    <span class="k">except</span><span class="p">:</span>
-</span><span id="get_django_settings-19"><a href="#get_django_settings-19"><span class="linenos">19</span></a>        <span class="k">pass</span>
-</span><span id="get_django_settings-20"><a href="#get_django_settings-20"><span class="linenos">20</span></a>    <span class="k">try</span><span class="p">:</span>
-</span><span id="get_django_settings-21"><a href="#get_django_settings-21"><span class="linenos">21</span></a>        <span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
-</span><span id="get_django_settings-22"><a href="#get_django_settings-22"><span class="linenos">22</span></a>        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">configured</span><span class="p">:</span>
-</span><span id="get_django_settings-23"><a href="#get_django_settings-23"><span class="linenos">23</span></a>            <span class="k">return</span> <span class="n">settings</span>
-</span><span id="get_django_settings-24"><a href="#get_django_settings-24"><span class="linenos">24</span></a>    <span class="k">except</span><span class="p">:</span>
-</span><span id="get_django_settings-25"><a href="#get_django_settings-25"><span class="linenos">25</span></a>        <span class="k">pass</span>
-</span><span id="get_django_settings-26"><a href="#get_django_settings-26"><span class="linenos">26</span></a>    <span class="k">return</span> <span class="kc">None</span>
-</span></pre></div>
-
-
-            <div class="docstring"><p>Get the Django settings</p>
-</div>
-
-
-                </section>
-                <section id="get_config">
-                            <input id="get_config-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
-<div class="attr function">
-            
-        <span class="def">def</span>
-        <span class="name">get_config</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">config</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
-
-                <label class="view-source-button" for="get_config-view-source"><span>View Source</span></label>
-
-    </div>
-    <a class="headerlink" href="#get_config"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="get_config-29"><a href="#get_config-29"><span class="linenos">29</span></a><span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="get_config-30"><a href="#get_config-30"><span class="linenos">30</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="get_config-31"><a href="#get_config-31"><span class="linenos">31</span></a><span class="sd">    Get the configuration for the socket server</span>
-</span><span id="get_config-32"><a href="#get_config-32"><span class="linenos">32</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="get_config-33"><a href="#get_config-33"><span class="linenos">33</span></a>    <span class="c1"># If the config is passed, return it.</span>
-</span><span id="get_config-34"><a href="#get_config-34"><span class="linenos">34</span></a>    <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="get_config-35"><a href="#get_config-35"><span class="linenos">35</span></a>        <span class="k">return</span> <span class="n">config</span>
-</span><span id="get_config-36"><a href="#get_config-36"><span class="linenos">36</span></a>    <span class="c1"># If the config is not passed, try to get it from the Django settings</span>
-</span><span id="get_config-37"><a href="#get_config-37"><span class="linenos">37</span></a>    <span class="n">django_settings</span> <span class="o">=</span> <span class="n">get_django_settings</span><span class="p">()</span>
-</span><span id="get_config-38"><a href="#get_config-38"><span class="linenos">38</span></a>    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">django_settings</span><span class="p">,</span> <span class="s2">&quot;DJANGO_SOCKETS_CONFIG&quot;</span><span class="p">):</span>
-</span><span id="get_config-39"><a href="#get_config-39"><span class="linenos">39</span></a>        <span class="k">return</span> <span class="n">django_settings</span><span class="o">.</span><span class="n">DJANGO_SOCKETS_CONFIG</span>
-</span><span id="get_config-40"><a href="#get_config-40"><span class="linenos">40</span></a>    <span class="c1"># If nothing has been returned yet, return a default configuration</span>
-</span><span id="get_config-41"><a href="#get_config-41"><span class="linenos">41</span></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;hosts&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="s2">&quot;redis://0.0.0.0:6379&quot;</span><span class="p">}]}</span>
-</span></pre></div>
-
-
-            <div class="docstring"><p>Get the configuration for the socket server</p>
-</div>
-
-
-                </section>
                 <section id="run_in_thread">
                             <input id="run_in_thread-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 <div class="attr function">
@@ -442,18 +339,18 @@
 
     </div>
     <a class="headerlink" href="#run_in_thread"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="run_in_thread-44"><a href="#run_in_thread-44"><span class="linenos">44</span></a><span class="k">def</span> <span class="nf">run_in_thread</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="run_in_thread-45"><a href="#run_in_thread-45"><span class="linenos">45</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="run_in_thread-46"><a href="#run_in_thread-46"><span class="linenos">46</span></a><span class="sd">    Takes in a synchronous command along with args and kwargs and runs it in a background</span>
-</span><span id="run_in_thread-47"><a href="#run_in_thread-47"><span class="linenos">47</span></a><span class="sd">    thread that is not tied to the websocket connection.</span>
-</span><span id="run_in_thread-48"><a href="#run_in_thread-48"><span class="linenos">48</span></a>
-</span><span id="run_in_thread-49"><a href="#run_in_thread-49"><span class="linenos">49</span></a><span class="sd">    This will be terminated when the larger daphne server is terminated</span>
-</span><span id="run_in_thread-50"><a href="#run_in_thread-50"><span class="linenos">50</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="run_in_thread-51"><a href="#run_in_thread-51"><span class="linenos">51</span></a>    <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
-</span><span id="run_in_thread-52"><a href="#run_in_thread-52"><span class="linenos">52</span></a>        <span class="n">target</span><span class="o">=</span><span class="n">command</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span>
-</span><span id="run_in_thread-53"><a href="#run_in_thread-53"><span class="linenos">53</span></a>    <span class="p">)</span>
-</span><span id="run_in_thread-54"><a href="#run_in_thread-54"><span class="linenos">54</span></a>    <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-</span><span id="run_in_thread-55"><a href="#run_in_thread-55"><span class="linenos">55</span></a>    <span class="k">return</span> <span class="n">thread</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="run_in_thread-13"><a href="#run_in_thread-13"><span class="linenos">13</span></a><span class="k">def</span> <span class="nf">run_in_thread</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="run_in_thread-14"><a href="#run_in_thread-14"><span class="linenos">14</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="run_in_thread-15"><a href="#run_in_thread-15"><span class="linenos">15</span></a><span class="sd">    Takes in a synchronous command along with args and kwargs and runs it in a background</span>
+</span><span id="run_in_thread-16"><a href="#run_in_thread-16"><span class="linenos">16</span></a><span class="sd">    thread that is not tied to the websocket connection.</span>
+</span><span id="run_in_thread-17"><a href="#run_in_thread-17"><span class="linenos">17</span></a>
+</span><span id="run_in_thread-18"><a href="#run_in_thread-18"><span class="linenos">18</span></a><span class="sd">    This will be terminated when the larger daphne server is terminated</span>
+</span><span id="run_in_thread-19"><a href="#run_in_thread-19"><span class="linenos">19</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="run_in_thread-20"><a href="#run_in_thread-20"><span class="linenos">20</span></a>    <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+</span><span id="run_in_thread-21"><a href="#run_in_thread-21"><span class="linenos">21</span></a>        <span class="n">target</span><span class="o">=</span><span class="n">command</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="run_in_thread-22"><a href="#run_in_thread-22"><span class="linenos">22</span></a>    <span class="p">)</span>
+</span><span id="run_in_thread-23"><a href="#run_in_thread-23"><span class="linenos">23</span></a>    <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</span><span id="run_in_thread-24"><a href="#run_in_thread-24"><span class="linenos">24</span></a>    <span class="k">return</span> <span class="n">thread</span>
 </span></pre></div>
 
 
@@ -476,12 +373,12 @@ thread that is not tied to the websocket connection.</p>
 
     </div>
     <a class="headerlink" href="#start_event_loop_thread"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="start_event_loop_thread-58"><a href="#start_event_loop_thread-58"><span class="linenos">58</span></a><span class="k">def</span> <span class="nf">start_event_loop_thread</span><span class="p">(</span><span class="n">loop</span><span class="p">):</span>
-</span><span id="start_event_loop_thread-59"><a href="#start_event_loop_thread-59"><span class="linenos">59</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="start_event_loop_thread-60"><a href="#start_event_loop_thread-60"><span class="linenos">60</span></a><span class="sd">    Starts the event loop in a new thread</span>
-</span><span id="start_event_loop_thread-61"><a href="#start_event_loop_thread-61"><span class="linenos">61</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="start_event_loop_thread-62"><a href="#start_event_loop_thread-62"><span class="linenos">62</span></a>    <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
-</span><span id="start_event_loop_thread-63"><a href="#start_event_loop_thread-63"><span class="linenos">63</span></a>    <span class="n">loop</span><span class="o">.</span><span class="n">run_forever</span><span class="p">()</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="start_event_loop_thread-27"><a href="#start_event_loop_thread-27"><span class="linenos">27</span></a><span class="k">def</span> <span class="nf">start_event_loop_thread</span><span class="p">(</span><span class="n">loop</span><span class="p">):</span>
+</span><span id="start_event_loop_thread-28"><a href="#start_event_loop_thread-28"><span class="linenos">28</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="start_event_loop_thread-29"><a href="#start_event_loop_thread-29"><span class="linenos">29</span></a><span class="sd">    Starts the event loop in a new thread</span>
+</span><span id="start_event_loop_thread-30"><a href="#start_event_loop_thread-30"><span class="linenos">30</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="start_event_loop_thread-31"><a href="#start_event_loop_thread-31"><span class="linenos">31</span></a>    <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
+</span><span id="start_event_loop_thread-32"><a href="#start_event_loop_thread-32"><span class="linenos">32</span></a>    <span class="n">loop</span><span class="o">.</span><span class="n">run_forever</span><span class="p">()</span>
 </span></pre></div>
 
 
@@ -501,17 +398,17 @@ thread that is not tied to the websocket connection.</p>
 
     </div>
     <a class="headerlink" href="#ensure_loop_running"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ensure_loop_running-66"><a href="#ensure_loop_running-66"><span class="linenos">66</span></a><span class="k">def</span> <span class="nf">ensure_loop_running</span><span class="p">(</span><span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="ensure_loop_running-67"><a href="#ensure_loop_running-67"><span class="linenos">67</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="ensure_loop_running-68"><a href="#ensure_loop_running-68"><span class="linenos">68</span></a><span class="sd">    Starts the event loop in a new thread and returns the thread</span>
-</span><span id="ensure_loop_running-69"><a href="#ensure_loop_running-69"><span class="linenos">69</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="ensure_loop_running-70"><a href="#ensure_loop_running-70"><span class="linenos">70</span></a>    <span class="n">loop</span> <span class="o">=</span> <span class="n">loop</span> <span class="k">if</span> <span class="n">loop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
-</span><span id="ensure_loop_running-71"><a href="#ensure_loop_running-71"><span class="linenos">71</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">loop</span><span class="o">.</span><span class="n">is_running</span><span class="p">():</span>
-</span><span id="ensure_loop_running-72"><a href="#ensure_loop_running-72"><span class="linenos">72</span></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="ensure_loop_running-73"><a href="#ensure_loop_running-73"><span class="linenos">73</span></a>            <span class="n">thread</span> <span class="o">=</span> <span class="n">run_in_thread</span><span class="p">(</span><span class="n">start_event_loop_thread</span><span class="p">,</span> <span class="n">loop</span><span class="p">)</span>
-</span><span id="ensure_loop_running-74"><a href="#ensure_loop_running-74"><span class="linenos">74</span></a>        <span class="k">except</span><span class="p">:</span>
-</span><span id="ensure_loop_running-75"><a href="#ensure_loop_running-75"><span class="linenos">75</span></a>            <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s2">&quot;Event Loop already running&quot;</span><span class="p">)</span>
-</span><span id="ensure_loop_running-76"><a href="#ensure_loop_running-76"><span class="linenos">76</span></a>    <span class="k">return</span> <span class="n">loop</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ensure_loop_running-35"><a href="#ensure_loop_running-35"><span class="linenos">35</span></a><span class="k">def</span> <span class="nf">ensure_loop_running</span><span class="p">(</span><span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="ensure_loop_running-36"><a href="#ensure_loop_running-36"><span class="linenos">36</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="ensure_loop_running-37"><a href="#ensure_loop_running-37"><span class="linenos">37</span></a><span class="sd">    Starts the event loop in a new thread and returns the thread</span>
+</span><span id="ensure_loop_running-38"><a href="#ensure_loop_running-38"><span class="linenos">38</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="ensure_loop_running-39"><a href="#ensure_loop_running-39"><span class="linenos">39</span></a>    <span class="n">loop</span> <span class="o">=</span> <span class="n">loop</span> <span class="k">if</span> <span class="n">loop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+</span><span id="ensure_loop_running-40"><a href="#ensure_loop_running-40"><span class="linenos">40</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">loop</span><span class="o">.</span><span class="n">is_running</span><span class="p">():</span>
+</span><span id="ensure_loop_running-41"><a href="#ensure_loop_running-41"><span class="linenos">41</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="ensure_loop_running-42"><a href="#ensure_loop_running-42"><span class="linenos">42</span></a>            <span class="n">thread</span> <span class="o">=</span> <span class="n">run_in_thread</span><span class="p">(</span><span class="n">start_event_loop_thread</span><span class="p">,</span> <span class="n">loop</span><span class="p">)</span>
+</span><span id="ensure_loop_running-43"><a href="#ensure_loop_running-43"><span class="linenos">43</span></a>        <span class="k">except</span><span class="p">:</span>
+</span><span id="ensure_loop_running-44"><a href="#ensure_loop_running-44"><span class="linenos">44</span></a>            <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s2">&quot;Event Loop already running&quot;</span><span class="p">)</span>
+</span><span id="ensure_loop_running-45"><a href="#ensure_loop_running-45"><span class="linenos">45</span></a>    <span class="k">return</span> <span class="n">loop</span>
 </span></pre></div>
 
 
@@ -531,17 +428,17 @@ thread that is not tied to the websocket connection.</p>
 
     </div>
     <a class="headerlink" href="#DatabaseSyncToAsync"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="DatabaseSyncToAsync-84"><a href="#DatabaseSyncToAsync-84"><span class="linenos">84</span></a><span class="k">class</span> <span class="nc">DatabaseSyncToAsync</span><span class="p">(</span><span class="n">SyncToAsync</span><span class="p">):</span>
-</span><span id="DatabaseSyncToAsync-85"><a href="#DatabaseSyncToAsync-85"><span class="linenos">85</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="DatabaseSyncToAsync-86"><a href="#DatabaseSyncToAsync-86"><span class="linenos">86</span></a><span class="sd">    SyncToAsync version that cleans up old database connections when it exits.</span>
-</span><span id="DatabaseSyncToAsync-87"><a href="#DatabaseSyncToAsync-87"><span class="linenos">87</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="DatabaseSyncToAsync-88"><a href="#DatabaseSyncToAsync-88"><span class="linenos">88</span></a>
-</span><span id="DatabaseSyncToAsync-89"><a href="#DatabaseSyncToAsync-89"><span class="linenos">89</span></a>    <span class="k">def</span> <span class="nf">thread_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="DatabaseSyncToAsync-90"><a href="#DatabaseSyncToAsync-90"><span class="linenos">90</span></a>        <span class="n">close_old_connections</span><span class="p">()</span>
-</span><span id="DatabaseSyncToAsync-91"><a href="#DatabaseSyncToAsync-91"><span class="linenos">91</span></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="DatabaseSyncToAsync-92"><a href="#DatabaseSyncToAsync-92"><span class="linenos">92</span></a>            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">thread_handler</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="DatabaseSyncToAsync-93"><a href="#DatabaseSyncToAsync-93"><span class="linenos">93</span></a>        <span class="k">finally</span><span class="p">:</span>
-</span><span id="DatabaseSyncToAsync-94"><a href="#DatabaseSyncToAsync-94"><span class="linenos">94</span></a>            <span class="n">close_old_connections</span><span class="p">()</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="DatabaseSyncToAsync-53"><a href="#DatabaseSyncToAsync-53"><span class="linenos">53</span></a><span class="k">class</span> <span class="nc">DatabaseSyncToAsync</span><span class="p">(</span><span class="n">SyncToAsync</span><span class="p">):</span>
+</span><span id="DatabaseSyncToAsync-54"><a href="#DatabaseSyncToAsync-54"><span class="linenos">54</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="DatabaseSyncToAsync-55"><a href="#DatabaseSyncToAsync-55"><span class="linenos">55</span></a><span class="sd">    SyncToAsync version that cleans up old database connections when it exits.</span>
+</span><span id="DatabaseSyncToAsync-56"><a href="#DatabaseSyncToAsync-56"><span class="linenos">56</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="DatabaseSyncToAsync-57"><a href="#DatabaseSyncToAsync-57"><span class="linenos">57</span></a>
+</span><span id="DatabaseSyncToAsync-58"><a href="#DatabaseSyncToAsync-58"><span class="linenos">58</span></a>    <span class="k">def</span> <span class="nf">thread_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="DatabaseSyncToAsync-59"><a href="#DatabaseSyncToAsync-59"><span class="linenos">59</span></a>        <span class="n">close_old_connections</span><span class="p">()</span>
+</span><span id="DatabaseSyncToAsync-60"><a href="#DatabaseSyncToAsync-60"><span class="linenos">60</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="DatabaseSyncToAsync-61"><a href="#DatabaseSyncToAsync-61"><span class="linenos">61</span></a>            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">thread_handler</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="DatabaseSyncToAsync-62"><a href="#DatabaseSyncToAsync-62"><span class="linenos">62</span></a>        <span class="k">finally</span><span class="p">:</span>
+</span><span id="DatabaseSyncToAsync-63"><a href="#DatabaseSyncToAsync-63"><span class="linenos">63</span></a>            <span class="n">close_old_connections</span><span class="p">()</span>
 </span></pre></div>
 
 
@@ -560,12 +457,12 @@ thread that is not tied to the websocket connection.</p>
 
     </div>
     <a class="headerlink" href="#DatabaseSyncToAsync.thread_handler"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="DatabaseSyncToAsync.thread_handler-89"><a href="#DatabaseSyncToAsync.thread_handler-89"><span class="linenos">89</span></a>    <span class="k">def</span> <span class="nf">thread_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="DatabaseSyncToAsync.thread_handler-90"><a href="#DatabaseSyncToAsync.thread_handler-90"><span class="linenos">90</span></a>        <span class="n">close_old_connections</span><span class="p">()</span>
-</span><span id="DatabaseSyncToAsync.thread_handler-91"><a href="#DatabaseSyncToAsync.thread_handler-91"><span class="linenos">91</span></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="DatabaseSyncToAsync.thread_handler-92"><a href="#DatabaseSyncToAsync.thread_handler-92"><span class="linenos">92</span></a>            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">thread_handler</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="DatabaseSyncToAsync.thread_handler-93"><a href="#DatabaseSyncToAsync.thread_handler-93"><span class="linenos">93</span></a>        <span class="k">finally</span><span class="p">:</span>
-</span><span id="DatabaseSyncToAsync.thread_handler-94"><a href="#DatabaseSyncToAsync.thread_handler-94"><span class="linenos">94</span></a>            <span class="n">close_old_connections</span><span class="p">()</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="DatabaseSyncToAsync.thread_handler-58"><a href="#DatabaseSyncToAsync.thread_handler-58"><span class="linenos">58</span></a>    <span class="k">def</span> <span class="nf">thread_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="DatabaseSyncToAsync.thread_handler-59"><a href="#DatabaseSyncToAsync.thread_handler-59"><span class="linenos">59</span></a>        <span class="n">close_old_connections</span><span class="p">()</span>
+</span><span id="DatabaseSyncToAsync.thread_handler-60"><a href="#DatabaseSyncToAsync.thread_handler-60"><span class="linenos">60</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="DatabaseSyncToAsync.thread_handler-61"><a href="#DatabaseSyncToAsync.thread_handler-61"><span class="linenos">61</span></a>            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">thread_handler</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="DatabaseSyncToAsync.thread_handler-62"><a href="#DatabaseSyncToAsync.thread_handler-62"><span class="linenos">62</span></a>        <span class="k">finally</span><span class="p">:</span>
+</span><span id="DatabaseSyncToAsync.thread_handler-63"><a href="#DatabaseSyncToAsync.thread_handler-63"><span class="linenos">63</span></a>            <span class="n">close_old_connections</span><span class="p">()</span>
 </span></pre></div>
 
 
@@ -598,23 +495,23 @@ thread that is not tied to the websocket connection.</p>
 
     </div>
     <a class="headerlink" href="#ProtocolTypeRouter"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ProtocolTypeRouter-106"><a href="#ProtocolTypeRouter-106"><span class="linenos">106</span></a><span class="k">class</span> <span class="nc">ProtocolTypeRouter</span><span class="p">:</span>
-</span><span id="ProtocolTypeRouter-107"><a href="#ProtocolTypeRouter-107"><span class="linenos">107</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="ProtocolTypeRouter-108"><a href="#ProtocolTypeRouter-108"><span class="linenos">108</span></a><span class="sd">    Takes a mapping of protocol type names to other Application instances,</span>
-</span><span id="ProtocolTypeRouter-109"><a href="#ProtocolTypeRouter-109"><span class="linenos">109</span></a><span class="sd">    and dispatches to the right one based on protocol name (or raises an error)</span>
-</span><span id="ProtocolTypeRouter-110"><a href="#ProtocolTypeRouter-110"><span class="linenos">110</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="ProtocolTypeRouter-111"><a href="#ProtocolTypeRouter-111"><span class="linenos">111</span></a>
-</span><span id="ProtocolTypeRouter-112"><a href="#ProtocolTypeRouter-112"><span class="linenos">112</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">application_mapping</span><span class="p">):</span>
-</span><span id="ProtocolTypeRouter-113"><a href="#ProtocolTypeRouter-113"><span class="linenos">113</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">application_mapping</span> <span class="o">=</span> <span class="n">application_mapping</span>
-</span><span id="ProtocolTypeRouter-114"><a href="#ProtocolTypeRouter-114"><span class="linenos">114</span></a>
-</span><span id="ProtocolTypeRouter-115"><a href="#ProtocolTypeRouter-115"><span class="linenos">115</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">):</span>
-</span><span id="ProtocolTypeRouter-116"><a href="#ProtocolTypeRouter-116"><span class="linenos">116</span></a>        <span class="k">if</span> <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">application_mapping</span><span class="p">:</span>
-</span><span id="ProtocolTypeRouter-117"><a href="#ProtocolTypeRouter-117"><span class="linenos">117</span></a>            <span class="n">application</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">application_mapping</span><span class="p">[</span><span class="n">scope</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]]</span>
-</span><span id="ProtocolTypeRouter-118"><a href="#ProtocolTypeRouter-118"><span class="linenos">118</span></a>            <span class="k">return</span> <span class="k">await</span> <span class="n">application</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">)</span>
-</span><span id="ProtocolTypeRouter-119"><a href="#ProtocolTypeRouter-119"><span class="linenos">119</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="ProtocolTypeRouter-120"><a href="#ProtocolTypeRouter-120"><span class="linenos">120</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span id="ProtocolTypeRouter-121"><a href="#ProtocolTypeRouter-121"><span class="linenos">121</span></a>                <span class="s2">&quot;No application configured for scope type </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
-</span><span id="ProtocolTypeRouter-122"><a href="#ProtocolTypeRouter-122"><span class="linenos">122</span></a>            <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ProtocolTypeRouter-75"><a href="#ProtocolTypeRouter-75"><span class="linenos">75</span></a><span class="k">class</span> <span class="nc">ProtocolTypeRouter</span><span class="p">:</span>
+</span><span id="ProtocolTypeRouter-76"><a href="#ProtocolTypeRouter-76"><span class="linenos">76</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="ProtocolTypeRouter-77"><a href="#ProtocolTypeRouter-77"><span class="linenos">77</span></a><span class="sd">    Takes a mapping of protocol type names to other Application instances,</span>
+</span><span id="ProtocolTypeRouter-78"><a href="#ProtocolTypeRouter-78"><span class="linenos">78</span></a><span class="sd">    and dispatches to the right one based on protocol name (or raises an error)</span>
+</span><span id="ProtocolTypeRouter-79"><a href="#ProtocolTypeRouter-79"><span class="linenos">79</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="ProtocolTypeRouter-80"><a href="#ProtocolTypeRouter-80"><span class="linenos">80</span></a>
+</span><span id="ProtocolTypeRouter-81"><a href="#ProtocolTypeRouter-81"><span class="linenos">81</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">application_mapping</span><span class="p">):</span>
+</span><span id="ProtocolTypeRouter-82"><a href="#ProtocolTypeRouter-82"><span class="linenos">82</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">application_mapping</span> <span class="o">=</span> <span class="n">application_mapping</span>
+</span><span id="ProtocolTypeRouter-83"><a href="#ProtocolTypeRouter-83"><span class="linenos">83</span></a>
+</span><span id="ProtocolTypeRouter-84"><a href="#ProtocolTypeRouter-84"><span class="linenos">84</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">):</span>
+</span><span id="ProtocolTypeRouter-85"><a href="#ProtocolTypeRouter-85"><span class="linenos">85</span></a>        <span class="k">if</span> <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">application_mapping</span><span class="p">:</span>
+</span><span id="ProtocolTypeRouter-86"><a href="#ProtocolTypeRouter-86"><span class="linenos">86</span></a>            <span class="n">application</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">application_mapping</span><span class="p">[</span><span class="n">scope</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]]</span>
+</span><span id="ProtocolTypeRouter-87"><a href="#ProtocolTypeRouter-87"><span class="linenos">87</span></a>            <span class="k">return</span> <span class="k">await</span> <span class="n">application</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">)</span>
+</span><span id="ProtocolTypeRouter-88"><a href="#ProtocolTypeRouter-88"><span class="linenos">88</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="ProtocolTypeRouter-89"><a href="#ProtocolTypeRouter-89"><span class="linenos">89</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="ProtocolTypeRouter-90"><a href="#ProtocolTypeRouter-90"><span class="linenos">90</span></a>                <span class="s2">&quot;No application configured for scope type </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+</span><span id="ProtocolTypeRouter-91"><a href="#ProtocolTypeRouter-91"><span class="linenos">91</span></a>            <span class="p">)</span>
 </span></pre></div>
 
 
@@ -633,8 +530,8 @@ and dispatches to the right one based on protocol name (or raises an error)</p>
 
     </div>
     <a class="headerlink" href="#ProtocolTypeRouter.__init__"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ProtocolTypeRouter.__init__-112"><a href="#ProtocolTypeRouter.__init__-112"><span class="linenos">112</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">application_mapping</span><span class="p">):</span>
-</span><span id="ProtocolTypeRouter.__init__-113"><a href="#ProtocolTypeRouter.__init__-113"><span class="linenos">113</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">application_mapping</span> <span class="o">=</span> <span class="n">application_mapping</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ProtocolTypeRouter.__init__-81"><a href="#ProtocolTypeRouter.__init__-81"><span class="linenos">81</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">application_mapping</span><span class="p">):</span>
+</span><span id="ProtocolTypeRouter.__init__-82"><a href="#ProtocolTypeRouter.__init__-82"><span class="linenos">82</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">application_mapping</span> <span class="o">=</span> <span class="n">application_mapping</span>
 </span></pre></div>
 
 
@@ -664,94 +561,94 @@ and dispatches to the right one based on protocol name (or raises an error)</p>
 
     </div>
     <a class="headerlink" href="#URLRouter"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="URLRouter-125"><a href="#URLRouter-125"><span class="linenos">125</span></a><span class="k">class</span> <span class="nc">URLRouter</span><span class="p">:</span>
-</span><span id="URLRouter-126"><a href="#URLRouter-126"><span class="linenos">126</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="URLRouter-127"><a href="#URLRouter-127"><span class="linenos">127</span></a><span class="sd">    Routes to different applications/consumers based on the URL path.</span>
-</span><span id="URLRouter-128"><a href="#URLRouter-128"><span class="linenos">128</span></a>
-</span><span id="URLRouter-129"><a href="#URLRouter-129"><span class="linenos">129</span></a><span class="sd">    Works with anything that has a ``path`` key, but intended for WebSocket</span>
-</span><span id="URLRouter-130"><a href="#URLRouter-130"><span class="linenos">130</span></a><span class="sd">    and HTTP. Uses Django&#39;s django.urls objects for resolution -</span>
-</span><span id="URLRouter-131"><a href="#URLRouter-131"><span class="linenos">131</span></a><span class="sd">    path() or re_path().</span>
-</span><span id="URLRouter-132"><a href="#URLRouter-132"><span class="linenos">132</span></a><span class="sd">    &quot;&quot;&quot;</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="URLRouter-94"><a href="#URLRouter-94"><span class="linenos"> 94</span></a><span class="k">class</span> <span class="nc">URLRouter</span><span class="p">:</span>
+</span><span id="URLRouter-95"><a href="#URLRouter-95"><span class="linenos"> 95</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="URLRouter-96"><a href="#URLRouter-96"><span class="linenos"> 96</span></a><span class="sd">    Routes to different applications/consumers based on the URL path.</span>
+</span><span id="URLRouter-97"><a href="#URLRouter-97"><span class="linenos"> 97</span></a>
+</span><span id="URLRouter-98"><a href="#URLRouter-98"><span class="linenos"> 98</span></a><span class="sd">    Works with anything that has a ``path`` key, but intended for WebSocket</span>
+</span><span id="URLRouter-99"><a href="#URLRouter-99"><span class="linenos"> 99</span></a><span class="sd">    and HTTP. Uses Django&#39;s django.urls objects for resolution -</span>
+</span><span id="URLRouter-100"><a href="#URLRouter-100"><span class="linenos">100</span></a><span class="sd">    path() or re_path().</span>
+</span><span id="URLRouter-101"><a href="#URLRouter-101"><span class="linenos">101</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="URLRouter-102"><a href="#URLRouter-102"><span class="linenos">102</span></a>
+</span><span id="URLRouter-103"><a href="#URLRouter-103"><span class="linenos">103</span></a>    <span class="c1">#: This router wants to do routing based on scope[path] or</span>
+</span><span id="URLRouter-104"><a href="#URLRouter-104"><span class="linenos">104</span></a>    <span class="c1">#: scope[path_remaining]. ``path()`` entries in URLRouter should not be</span>
+</span><span id="URLRouter-105"><a href="#URLRouter-105"><span class="linenos">105</span></a>    <span class="c1">#: treated as endpoints (ended with ``$``), but similar to ``include()``.</span>
+</span><span id="URLRouter-106"><a href="#URLRouter-106"><span class="linenos">106</span></a>    <span class="n">_path_routing</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span id="URLRouter-107"><a href="#URLRouter-107"><span class="linenos">107</span></a>
+</span><span id="URLRouter-108"><a href="#URLRouter-108"><span class="linenos">108</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routes</span><span class="p">):</span>
+</span><span id="URLRouter-109"><a href="#URLRouter-109"><span class="linenos">109</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">routes</span> <span class="o">=</span> <span class="n">routes</span>
+</span><span id="URLRouter-110"><a href="#URLRouter-110"><span class="linenos">110</span></a>
+</span><span id="URLRouter-111"><a href="#URLRouter-111"><span class="linenos">111</span></a>        <span class="k">for</span> <span class="n">route</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routes</span><span class="p">:</span>
+</span><span id="URLRouter-112"><a href="#URLRouter-112"><span class="linenos">112</span></a>            <span class="c1"># The inner ASGI app wants to do additional routing, route</span>
+</span><span id="URLRouter-113"><a href="#URLRouter-113"><span class="linenos">113</span></a>            <span class="c1"># must not be an endpoint</span>
+</span><span id="URLRouter-114"><a href="#URLRouter-114"><span class="linenos">114</span></a>            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">callback</span><span class="p">,</span> <span class="s2">&quot;_path_routing&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+</span><span id="URLRouter-115"><a href="#URLRouter-115"><span class="linenos">115</span></a>                <span class="n">pattern</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">pattern</span>
+</span><span id="URLRouter-116"><a href="#URLRouter-116"><span class="linenos">116</span></a>                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">RegexPattern</span><span class="p">):</span>
+</span><span id="URLRouter-117"><a href="#URLRouter-117"><span class="linenos">117</span></a>                    <span class="n">arg</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">_regex</span>
+</span><span id="URLRouter-118"><a href="#URLRouter-118"><span class="linenos">118</span></a>                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">RoutePattern</span><span class="p">):</span>
+</span><span id="URLRouter-119"><a href="#URLRouter-119"><span class="linenos">119</span></a>                    <span class="n">arg</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">_route</span>
+</span><span id="URLRouter-120"><a href="#URLRouter-120"><span class="linenos">120</span></a>                <span class="k">else</span><span class="p">:</span>
+</span><span id="URLRouter-121"><a href="#URLRouter-121"><span class="linenos">121</span></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="URLRouter-122"><a href="#URLRouter-122"><span class="linenos">122</span></a>                        <span class="sa">f</span><span class="s2">&quot;Unsupported pattern type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="URLRouter-123"><a href="#URLRouter-123"><span class="linenos">123</span></a>                    <span class="p">)</span>
+</span><span id="URLRouter-124"><a href="#URLRouter-124"><span class="linenos">124</span></a>                <span class="n">route</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span>
+</span><span id="URLRouter-125"><a href="#URLRouter-125"><span class="linenos">125</span></a>                    <span class="n">arg</span><span class="p">,</span> <span class="n">pattern</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">is_endpoint</span><span class="o">=</span><span class="kc">False</span>
+</span><span id="URLRouter-126"><a href="#URLRouter-126"><span class="linenos">126</span></a>                <span class="p">)</span>
+</span><span id="URLRouter-127"><a href="#URLRouter-127"><span class="linenos">127</span></a>
+</span><span id="URLRouter-128"><a href="#URLRouter-128"><span class="linenos">128</span></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">route</span><span class="o">.</span><span class="n">callback</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">route</span><span class="p">,</span> <span class="n">URLResolver</span><span class="p">):</span>
+</span><span id="URLRouter-129"><a href="#URLRouter-129"><span class="linenos">129</span></a>                <span class="k">raise</span> <span class="n">ImproperlyConfigured</span><span class="p">(</span>
+</span><span id="URLRouter-130"><a href="#URLRouter-130"><span class="linenos">130</span></a>                    <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: include() is not supported in URLRouter. Use nested&quot;</span>
+</span><span id="URLRouter-131"><a href="#URLRouter-131"><span class="linenos">131</span></a>                    <span class="s2">&quot; URLRouter instances instead.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">route</span><span class="p">,)</span>
+</span><span id="URLRouter-132"><a href="#URLRouter-132"><span class="linenos">132</span></a>                <span class="p">)</span>
 </span><span id="URLRouter-133"><a href="#URLRouter-133"><span class="linenos">133</span></a>
-</span><span id="URLRouter-134"><a href="#URLRouter-134"><span class="linenos">134</span></a>    <span class="c1">#: This router wants to do routing based on scope[path] or</span>
-</span><span id="URLRouter-135"><a href="#URLRouter-135"><span class="linenos">135</span></a>    <span class="c1">#: scope[path_remaining]. ``path()`` entries in URLRouter should not be</span>
-</span><span id="URLRouter-136"><a href="#URLRouter-136"><span class="linenos">136</span></a>    <span class="c1">#: treated as endpoints (ended with ``$``), but similar to ``include()``.</span>
-</span><span id="URLRouter-137"><a href="#URLRouter-137"><span class="linenos">137</span></a>    <span class="n">_path_routing</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span id="URLRouter-138"><a href="#URLRouter-138"><span class="linenos">138</span></a>
-</span><span id="URLRouter-139"><a href="#URLRouter-139"><span class="linenos">139</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routes</span><span class="p">):</span>
-</span><span id="URLRouter-140"><a href="#URLRouter-140"><span class="linenos">140</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">routes</span> <span class="o">=</span> <span class="n">routes</span>
+</span><span id="URLRouter-134"><a href="#URLRouter-134"><span class="linenos">134</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">):</span>
+</span><span id="URLRouter-135"><a href="#URLRouter-135"><span class="linenos">135</span></a>        <span class="c1"># Get the path</span>
+</span><span id="URLRouter-136"><a href="#URLRouter-136"><span class="linenos">136</span></a>        <span class="n">path</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path_remaining&quot;</span><span class="p">,</span> <span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+</span><span id="URLRouter-137"><a href="#URLRouter-137"><span class="linenos">137</span></a>        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="URLRouter-138"><a href="#URLRouter-138"><span class="linenos">138</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="URLRouter-139"><a href="#URLRouter-139"><span class="linenos">139</span></a>                <span class="s2">&quot;No &#39;path&#39; key in connection scope, cannot route URLs&quot;</span>
+</span><span id="URLRouter-140"><a href="#URLRouter-140"><span class="linenos">140</span></a>            <span class="p">)</span>
 </span><span id="URLRouter-141"><a href="#URLRouter-141"><span class="linenos">141</span></a>
-</span><span id="URLRouter-142"><a href="#URLRouter-142"><span class="linenos">142</span></a>        <span class="k">for</span> <span class="n">route</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routes</span><span class="p">:</span>
-</span><span id="URLRouter-143"><a href="#URLRouter-143"><span class="linenos">143</span></a>            <span class="c1"># The inner ASGI app wants to do additional routing, route</span>
-</span><span id="URLRouter-144"><a href="#URLRouter-144"><span class="linenos">144</span></a>            <span class="c1"># must not be an endpoint</span>
-</span><span id="URLRouter-145"><a href="#URLRouter-145"><span class="linenos">145</span></a>            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">callback</span><span class="p">,</span> <span class="s2">&quot;_path_routing&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-</span><span id="URLRouter-146"><a href="#URLRouter-146"><span class="linenos">146</span></a>                <span class="n">pattern</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">pattern</span>
-</span><span id="URLRouter-147"><a href="#URLRouter-147"><span class="linenos">147</span></a>                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">RegexPattern</span><span class="p">):</span>
-</span><span id="URLRouter-148"><a href="#URLRouter-148"><span class="linenos">148</span></a>                    <span class="n">arg</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">_regex</span>
-</span><span id="URLRouter-149"><a href="#URLRouter-149"><span class="linenos">149</span></a>                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">RoutePattern</span><span class="p">):</span>
-</span><span id="URLRouter-150"><a href="#URLRouter-150"><span class="linenos">150</span></a>                    <span class="n">arg</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">_route</span>
-</span><span id="URLRouter-151"><a href="#URLRouter-151"><span class="linenos">151</span></a>                <span class="k">else</span><span class="p">:</span>
-</span><span id="URLRouter-152"><a href="#URLRouter-152"><span class="linenos">152</span></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span id="URLRouter-153"><a href="#URLRouter-153"><span class="linenos">153</span></a>                        <span class="sa">f</span><span class="s2">&quot;Unsupported pattern type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="URLRouter-154"><a href="#URLRouter-154"><span class="linenos">154</span></a>                    <span class="p">)</span>
-</span><span id="URLRouter-155"><a href="#URLRouter-155"><span class="linenos">155</span></a>                <span class="n">route</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span>
-</span><span id="URLRouter-156"><a href="#URLRouter-156"><span class="linenos">156</span></a>                    <span class="n">arg</span><span class="p">,</span> <span class="n">pattern</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">is_endpoint</span><span class="o">=</span><span class="kc">False</span>
-</span><span id="URLRouter-157"><a href="#URLRouter-157"><span class="linenos">157</span></a>                <span class="p">)</span>
-</span><span id="URLRouter-158"><a href="#URLRouter-158"><span class="linenos">158</span></a>
-</span><span id="URLRouter-159"><a href="#URLRouter-159"><span class="linenos">159</span></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">route</span><span class="o">.</span><span class="n">callback</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">route</span><span class="p">,</span> <span class="n">URLResolver</span><span class="p">):</span>
-</span><span id="URLRouter-160"><a href="#URLRouter-160"><span class="linenos">160</span></a>                <span class="k">raise</span> <span class="n">ImproperlyConfigured</span><span class="p">(</span>
-</span><span id="URLRouter-161"><a href="#URLRouter-161"><span class="linenos">161</span></a>                    <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: include() is not supported in URLRouter. Use nested&quot;</span>
-</span><span id="URLRouter-162"><a href="#URLRouter-162"><span class="linenos">162</span></a>                    <span class="s2">&quot; URLRouter instances instead.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">route</span><span class="p">,)</span>
-</span><span id="URLRouter-163"><a href="#URLRouter-163"><span class="linenos">163</span></a>                <span class="p">)</span>
-</span><span id="URLRouter-164"><a href="#URLRouter-164"><span class="linenos">164</span></a>
-</span><span id="URLRouter-165"><a href="#URLRouter-165"><span class="linenos">165</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">):</span>
-</span><span id="URLRouter-166"><a href="#URLRouter-166"><span class="linenos">166</span></a>        <span class="c1"># Get the path</span>
-</span><span id="URLRouter-167"><a href="#URLRouter-167"><span class="linenos">167</span></a>        <span class="n">path</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path_remaining&quot;</span><span class="p">,</span> <span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
-</span><span id="URLRouter-168"><a href="#URLRouter-168"><span class="linenos">168</span></a>        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="URLRouter-169"><a href="#URLRouter-169"><span class="linenos">169</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span id="URLRouter-170"><a href="#URLRouter-170"><span class="linenos">170</span></a>                <span class="s2">&quot;No &#39;path&#39; key in connection scope, cannot route URLs&quot;</span>
-</span><span id="URLRouter-171"><a href="#URLRouter-171"><span class="linenos">171</span></a>            <span class="p">)</span>
-</span><span id="URLRouter-172"><a href="#URLRouter-172"><span class="linenos">172</span></a>
-</span><span id="URLRouter-173"><a href="#URLRouter-173"><span class="linenos">173</span></a>        <span class="k">if</span> <span class="s2">&quot;path_remaining&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">scope</span><span class="p">:</span>
-</span><span id="URLRouter-174"><a href="#URLRouter-174"><span class="linenos">174</span></a>            <span class="c1"># We are the outermost URLRouter, so handle root_path if present.</span>
-</span><span id="URLRouter-175"><a href="#URLRouter-175"><span class="linenos">175</span></a>            <span class="n">root_path</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;root_path&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-</span><span id="URLRouter-176"><a href="#URLRouter-176"><span class="linenos">176</span></a>            <span class="k">if</span> <span class="n">root_path</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">root_path</span><span class="p">):</span>
-</span><span id="URLRouter-177"><a href="#URLRouter-177"><span class="linenos">177</span></a>                <span class="c1"># If root_path is present, path must start with it.</span>
-</span><span id="URLRouter-178"><a href="#URLRouter-178"><span class="linenos">178</span></a>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No route found for path </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
-</span><span id="URLRouter-179"><a href="#URLRouter-179"><span class="linenos">179</span></a>            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">root_path</span><span class="p">)</span> <span class="p">:]</span>
-</span><span id="URLRouter-180"><a href="#URLRouter-180"><span class="linenos">180</span></a>
-</span><span id="URLRouter-181"><a href="#URLRouter-181"><span class="linenos">181</span></a>        <span class="c1"># Remove leading / to match Django&#39;s handling</span>
-</span><span id="URLRouter-182"><a href="#URLRouter-182"><span class="linenos">182</span></a>        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
-</span><span id="URLRouter-183"><a href="#URLRouter-183"><span class="linenos">183</span></a>        <span class="c1"># Run through the routes we have until one matches</span>
-</span><span id="URLRouter-184"><a href="#URLRouter-184"><span class="linenos">184</span></a>        <span class="k">for</span> <span class="n">route</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routes</span><span class="p">:</span>
-</span><span id="URLRouter-185"><a href="#URLRouter-185"><span class="linenos">185</span></a>            <span class="k">try</span><span class="p">:</span>
-</span><span id="URLRouter-186"><a href="#URLRouter-186"><span class="linenos">186</span></a>                <span class="n">match</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span id="URLRouter-187"><a href="#URLRouter-187"><span class="linenos">187</span></a>                <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
-</span><span id="URLRouter-188"><a href="#URLRouter-188"><span class="linenos">188</span></a>                    <span class="n">new_path</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span> <span class="o">=</span> <span class="n">match</span>
-</span><span id="URLRouter-189"><a href="#URLRouter-189"><span class="linenos">189</span></a>                    <span class="c1"># Add defaults to kwargs from the URL pattern.</span>
-</span><span id="URLRouter-190"><a href="#URLRouter-190"><span class="linenos">190</span></a>                    <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">default_args</span><span class="p">)</span>
-</span><span id="URLRouter-191"><a href="#URLRouter-191"><span class="linenos">191</span></a>                    <span class="c1"># Add args or kwargs into the scope</span>
-</span><span id="URLRouter-192"><a href="#URLRouter-192"><span class="linenos">192</span></a>                    <span class="n">outer</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;url_route&quot;</span><span class="p">,</span> <span class="p">{})</span>
-</span><span id="URLRouter-193"><a href="#URLRouter-193"><span class="linenos">193</span></a>                    <span class="n">application</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">callback</span>
-</span><span id="URLRouter-194"><a href="#URLRouter-194"><span class="linenos">194</span></a>                    <span class="k">return</span> <span class="k">await</span> <span class="n">application</span><span class="p">(</span>
-</span><span id="URLRouter-195"><a href="#URLRouter-195"><span class="linenos">195</span></a>                        <span class="nb">dict</span><span class="p">(</span>
-</span><span id="URLRouter-196"><a href="#URLRouter-196"><span class="linenos">196</span></a>                            <span class="n">scope</span><span class="p">,</span>
-</span><span id="URLRouter-197"><a href="#URLRouter-197"><span class="linenos">197</span></a>                            <span class="n">path_remaining</span><span class="o">=</span><span class="n">new_path</span><span class="p">,</span>
-</span><span id="URLRouter-198"><a href="#URLRouter-198"><span class="linenos">198</span></a>                            <span class="n">url_route</span><span class="o">=</span><span class="p">{</span>
-</span><span id="URLRouter-199"><a href="#URLRouter-199"><span class="linenos">199</span></a>                                <span class="s2">&quot;args&quot;</span><span class="p">:</span> <span class="n">outer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;args&quot;</span><span class="p">,</span> <span class="p">())</span> <span class="o">+</span> <span class="n">args</span><span class="p">,</span>
-</span><span id="URLRouter-200"><a href="#URLRouter-200"><span class="linenos">200</span></a>                                <span class="s2">&quot;kwargs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="o">**</span><span class="n">outer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;kwargs&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">},</span>
-</span><span id="URLRouter-201"><a href="#URLRouter-201"><span class="linenos">201</span></a>                            <span class="p">},</span>
-</span><span id="URLRouter-202"><a href="#URLRouter-202"><span class="linenos">202</span></a>                        <span class="p">),</span>
-</span><span id="URLRouter-203"><a href="#URLRouter-203"><span class="linenos">203</span></a>                        <span class="n">receive</span><span class="p">,</span>
-</span><span id="URLRouter-204"><a href="#URLRouter-204"><span class="linenos">204</span></a>                        <span class="n">send</span><span class="p">,</span>
-</span><span id="URLRouter-205"><a href="#URLRouter-205"><span class="linenos">205</span></a>                    <span class="p">)</span>
-</span><span id="URLRouter-206"><a href="#URLRouter-206"><span class="linenos">206</span></a>            <span class="k">except</span> <span class="n">Resolver404</span><span class="p">:</span>
-</span><span id="URLRouter-207"><a href="#URLRouter-207"><span class="linenos">207</span></a>                <span class="k">pass</span>
-</span><span id="URLRouter-208"><a href="#URLRouter-208"><span class="linenos">208</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="URLRouter-209"><a href="#URLRouter-209"><span class="linenos">209</span></a>            <span class="k">if</span> <span class="s2">&quot;path_remaining&quot;</span> <span class="ow">in</span> <span class="n">scope</span><span class="p">:</span>
-</span><span id="URLRouter-210"><a href="#URLRouter-210"><span class="linenos">210</span></a>                <span class="k">raise</span> <span class="n">Resolver404</span><span class="p">(</span><span class="s2">&quot;No route found for path </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
-</span><span id="URLRouter-211"><a href="#URLRouter-211"><span class="linenos">211</span></a>            <span class="c1"># We are the outermost URLRouter</span>
-</span><span id="URLRouter-212"><a href="#URLRouter-212"><span class="linenos">212</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No route found for path </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+</span><span id="URLRouter-142"><a href="#URLRouter-142"><span class="linenos">142</span></a>        <span class="k">if</span> <span class="s2">&quot;path_remaining&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">scope</span><span class="p">:</span>
+</span><span id="URLRouter-143"><a href="#URLRouter-143"><span class="linenos">143</span></a>            <span class="c1"># We are the outermost URLRouter, so handle root_path if present.</span>
+</span><span id="URLRouter-144"><a href="#URLRouter-144"><span class="linenos">144</span></a>            <span class="n">root_path</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;root_path&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+</span><span id="URLRouter-145"><a href="#URLRouter-145"><span class="linenos">145</span></a>            <span class="k">if</span> <span class="n">root_path</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">root_path</span><span class="p">):</span>
+</span><span id="URLRouter-146"><a href="#URLRouter-146"><span class="linenos">146</span></a>                <span class="c1"># If root_path is present, path must start with it.</span>
+</span><span id="URLRouter-147"><a href="#URLRouter-147"><span class="linenos">147</span></a>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No route found for path </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+</span><span id="URLRouter-148"><a href="#URLRouter-148"><span class="linenos">148</span></a>            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">root_path</span><span class="p">)</span> <span class="p">:]</span>
+</span><span id="URLRouter-149"><a href="#URLRouter-149"><span class="linenos">149</span></a>
+</span><span id="URLRouter-150"><a href="#URLRouter-150"><span class="linenos">150</span></a>        <span class="c1"># Remove leading / to match Django&#39;s handling</span>
+</span><span id="URLRouter-151"><a href="#URLRouter-151"><span class="linenos">151</span></a>        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+</span><span id="URLRouter-152"><a href="#URLRouter-152"><span class="linenos">152</span></a>        <span class="c1"># Run through the routes we have until one matches</span>
+</span><span id="URLRouter-153"><a href="#URLRouter-153"><span class="linenos">153</span></a>        <span class="k">for</span> <span class="n">route</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routes</span><span class="p">:</span>
+</span><span id="URLRouter-154"><a href="#URLRouter-154"><span class="linenos">154</span></a>            <span class="k">try</span><span class="p">:</span>
+</span><span id="URLRouter-155"><a href="#URLRouter-155"><span class="linenos">155</span></a>                <span class="n">match</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span id="URLRouter-156"><a href="#URLRouter-156"><span class="linenos">156</span></a>                <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+</span><span id="URLRouter-157"><a href="#URLRouter-157"><span class="linenos">157</span></a>                    <span class="n">new_path</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span> <span class="o">=</span> <span class="n">match</span>
+</span><span id="URLRouter-158"><a href="#URLRouter-158"><span class="linenos">158</span></a>                    <span class="c1"># Add defaults to kwargs from the URL pattern.</span>
+</span><span id="URLRouter-159"><a href="#URLRouter-159"><span class="linenos">159</span></a>                    <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">default_args</span><span class="p">)</span>
+</span><span id="URLRouter-160"><a href="#URLRouter-160"><span class="linenos">160</span></a>                    <span class="c1"># Add args or kwargs into the scope</span>
+</span><span id="URLRouter-161"><a href="#URLRouter-161"><span class="linenos">161</span></a>                    <span class="n">outer</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;url_route&quot;</span><span class="p">,</span> <span class="p">{})</span>
+</span><span id="URLRouter-162"><a href="#URLRouter-162"><span class="linenos">162</span></a>                    <span class="n">application</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">callback</span>
+</span><span id="URLRouter-163"><a href="#URLRouter-163"><span class="linenos">163</span></a>                    <span class="k">return</span> <span class="k">await</span> <span class="n">application</span><span class="p">(</span>
+</span><span id="URLRouter-164"><a href="#URLRouter-164"><span class="linenos">164</span></a>                        <span class="nb">dict</span><span class="p">(</span>
+</span><span id="URLRouter-165"><a href="#URLRouter-165"><span class="linenos">165</span></a>                            <span class="n">scope</span><span class="p">,</span>
+</span><span id="URLRouter-166"><a href="#URLRouter-166"><span class="linenos">166</span></a>                            <span class="n">path_remaining</span><span class="o">=</span><span class="n">new_path</span><span class="p">,</span>
+</span><span id="URLRouter-167"><a href="#URLRouter-167"><span class="linenos">167</span></a>                            <span class="n">url_route</span><span class="o">=</span><span class="p">{</span>
+</span><span id="URLRouter-168"><a href="#URLRouter-168"><span class="linenos">168</span></a>                                <span class="s2">&quot;args&quot;</span><span class="p">:</span> <span class="n">outer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;args&quot;</span><span class="p">,</span> <span class="p">())</span> <span class="o">+</span> <span class="n">args</span><span class="p">,</span>
+</span><span id="URLRouter-169"><a href="#URLRouter-169"><span class="linenos">169</span></a>                                <span class="s2">&quot;kwargs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="o">**</span><span class="n">outer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;kwargs&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">},</span>
+</span><span id="URLRouter-170"><a href="#URLRouter-170"><span class="linenos">170</span></a>                            <span class="p">},</span>
+</span><span id="URLRouter-171"><a href="#URLRouter-171"><span class="linenos">171</span></a>                        <span class="p">),</span>
+</span><span id="URLRouter-172"><a href="#URLRouter-172"><span class="linenos">172</span></a>                        <span class="n">receive</span><span class="p">,</span>
+</span><span id="URLRouter-173"><a href="#URLRouter-173"><span class="linenos">173</span></a>                        <span class="n">send</span><span class="p">,</span>
+</span><span id="URLRouter-174"><a href="#URLRouter-174"><span class="linenos">174</span></a>                    <span class="p">)</span>
+</span><span id="URLRouter-175"><a href="#URLRouter-175"><span class="linenos">175</span></a>            <span class="k">except</span> <span class="n">Resolver404</span><span class="p">:</span>
+</span><span id="URLRouter-176"><a href="#URLRouter-176"><span class="linenos">176</span></a>                <span class="k">pass</span>
+</span><span id="URLRouter-177"><a href="#URLRouter-177"><span class="linenos">177</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="URLRouter-178"><a href="#URLRouter-178"><span class="linenos">178</span></a>            <span class="k">if</span> <span class="s2">&quot;path_remaining&quot;</span> <span class="ow">in</span> <span class="n">scope</span><span class="p">:</span>
+</span><span id="URLRouter-179"><a href="#URLRouter-179"><span class="linenos">179</span></a>                <span class="k">raise</span> <span class="n">Resolver404</span><span class="p">(</span><span class="s2">&quot;No route found for path </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+</span><span id="URLRouter-180"><a href="#URLRouter-180"><span class="linenos">180</span></a>            <span class="c1"># We are the outermost URLRouter</span>
+</span><span id="URLRouter-181"><a href="#URLRouter-181"><span class="linenos">181</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No route found for path </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -773,31 +670,31 @@ path() or re_path().</p>
 
     </div>
     <a class="headerlink" href="#URLRouter.__init__"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="URLRouter.__init__-139"><a href="#URLRouter.__init__-139"><span class="linenos">139</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routes</span><span class="p">):</span>
-</span><span id="URLRouter.__init__-140"><a href="#URLRouter.__init__-140"><span class="linenos">140</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">routes</span> <span class="o">=</span> <span class="n">routes</span>
-</span><span id="URLRouter.__init__-141"><a href="#URLRouter.__init__-141"><span class="linenos">141</span></a>
-</span><span id="URLRouter.__init__-142"><a href="#URLRouter.__init__-142"><span class="linenos">142</span></a>        <span class="k">for</span> <span class="n">route</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routes</span><span class="p">:</span>
-</span><span id="URLRouter.__init__-143"><a href="#URLRouter.__init__-143"><span class="linenos">143</span></a>            <span class="c1"># The inner ASGI app wants to do additional routing, route</span>
-</span><span id="URLRouter.__init__-144"><a href="#URLRouter.__init__-144"><span class="linenos">144</span></a>            <span class="c1"># must not be an endpoint</span>
-</span><span id="URLRouter.__init__-145"><a href="#URLRouter.__init__-145"><span class="linenos">145</span></a>            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">callback</span><span class="p">,</span> <span class="s2">&quot;_path_routing&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-</span><span id="URLRouter.__init__-146"><a href="#URLRouter.__init__-146"><span class="linenos">146</span></a>                <span class="n">pattern</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">pattern</span>
-</span><span id="URLRouter.__init__-147"><a href="#URLRouter.__init__-147"><span class="linenos">147</span></a>                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">RegexPattern</span><span class="p">):</span>
-</span><span id="URLRouter.__init__-148"><a href="#URLRouter.__init__-148"><span class="linenos">148</span></a>                    <span class="n">arg</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">_regex</span>
-</span><span id="URLRouter.__init__-149"><a href="#URLRouter.__init__-149"><span class="linenos">149</span></a>                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">RoutePattern</span><span class="p">):</span>
-</span><span id="URLRouter.__init__-150"><a href="#URLRouter.__init__-150"><span class="linenos">150</span></a>                    <span class="n">arg</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">_route</span>
-</span><span id="URLRouter.__init__-151"><a href="#URLRouter.__init__-151"><span class="linenos">151</span></a>                <span class="k">else</span><span class="p">:</span>
-</span><span id="URLRouter.__init__-152"><a href="#URLRouter.__init__-152"><span class="linenos">152</span></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span id="URLRouter.__init__-153"><a href="#URLRouter.__init__-153"><span class="linenos">153</span></a>                        <span class="sa">f</span><span class="s2">&quot;Unsupported pattern type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="URLRouter.__init__-154"><a href="#URLRouter.__init__-154"><span class="linenos">154</span></a>                    <span class="p">)</span>
-</span><span id="URLRouter.__init__-155"><a href="#URLRouter.__init__-155"><span class="linenos">155</span></a>                <span class="n">route</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span>
-</span><span id="URLRouter.__init__-156"><a href="#URLRouter.__init__-156"><span class="linenos">156</span></a>                    <span class="n">arg</span><span class="p">,</span> <span class="n">pattern</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">is_endpoint</span><span class="o">=</span><span class="kc">False</span>
-</span><span id="URLRouter.__init__-157"><a href="#URLRouter.__init__-157"><span class="linenos">157</span></a>                <span class="p">)</span>
-</span><span id="URLRouter.__init__-158"><a href="#URLRouter.__init__-158"><span class="linenos">158</span></a>
-</span><span id="URLRouter.__init__-159"><a href="#URLRouter.__init__-159"><span class="linenos">159</span></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">route</span><span class="o">.</span><span class="n">callback</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">route</span><span class="p">,</span> <span class="n">URLResolver</span><span class="p">):</span>
-</span><span id="URLRouter.__init__-160"><a href="#URLRouter.__init__-160"><span class="linenos">160</span></a>                <span class="k">raise</span> <span class="n">ImproperlyConfigured</span><span class="p">(</span>
-</span><span id="URLRouter.__init__-161"><a href="#URLRouter.__init__-161"><span class="linenos">161</span></a>                    <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: include() is not supported in URLRouter. Use nested&quot;</span>
-</span><span id="URLRouter.__init__-162"><a href="#URLRouter.__init__-162"><span class="linenos">162</span></a>                    <span class="s2">&quot; URLRouter instances instead.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">route</span><span class="p">,)</span>
-</span><span id="URLRouter.__init__-163"><a href="#URLRouter.__init__-163"><span class="linenos">163</span></a>                <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="URLRouter.__init__-108"><a href="#URLRouter.__init__-108"><span class="linenos">108</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routes</span><span class="p">):</span>
+</span><span id="URLRouter.__init__-109"><a href="#URLRouter.__init__-109"><span class="linenos">109</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">routes</span> <span class="o">=</span> <span class="n">routes</span>
+</span><span id="URLRouter.__init__-110"><a href="#URLRouter.__init__-110"><span class="linenos">110</span></a>
+</span><span id="URLRouter.__init__-111"><a href="#URLRouter.__init__-111"><span class="linenos">111</span></a>        <span class="k">for</span> <span class="n">route</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routes</span><span class="p">:</span>
+</span><span id="URLRouter.__init__-112"><a href="#URLRouter.__init__-112"><span class="linenos">112</span></a>            <span class="c1"># The inner ASGI app wants to do additional routing, route</span>
+</span><span id="URLRouter.__init__-113"><a href="#URLRouter.__init__-113"><span class="linenos">113</span></a>            <span class="c1"># must not be an endpoint</span>
+</span><span id="URLRouter.__init__-114"><a href="#URLRouter.__init__-114"><span class="linenos">114</span></a>            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">callback</span><span class="p">,</span> <span class="s2">&quot;_path_routing&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+</span><span id="URLRouter.__init__-115"><a href="#URLRouter.__init__-115"><span class="linenos">115</span></a>                <span class="n">pattern</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">pattern</span>
+</span><span id="URLRouter.__init__-116"><a href="#URLRouter.__init__-116"><span class="linenos">116</span></a>                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">RegexPattern</span><span class="p">):</span>
+</span><span id="URLRouter.__init__-117"><a href="#URLRouter.__init__-117"><span class="linenos">117</span></a>                    <span class="n">arg</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">_regex</span>
+</span><span id="URLRouter.__init__-118"><a href="#URLRouter.__init__-118"><span class="linenos">118</span></a>                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">RoutePattern</span><span class="p">):</span>
+</span><span id="URLRouter.__init__-119"><a href="#URLRouter.__init__-119"><span class="linenos">119</span></a>                    <span class="n">arg</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">_route</span>
+</span><span id="URLRouter.__init__-120"><a href="#URLRouter.__init__-120"><span class="linenos">120</span></a>                <span class="k">else</span><span class="p">:</span>
+</span><span id="URLRouter.__init__-121"><a href="#URLRouter.__init__-121"><span class="linenos">121</span></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="URLRouter.__init__-122"><a href="#URLRouter.__init__-122"><span class="linenos">122</span></a>                        <span class="sa">f</span><span class="s2">&quot;Unsupported pattern type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="URLRouter.__init__-123"><a href="#URLRouter.__init__-123"><span class="linenos">123</span></a>                    <span class="p">)</span>
+</span><span id="URLRouter.__init__-124"><a href="#URLRouter.__init__-124"><span class="linenos">124</span></a>                <span class="n">route</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span>
+</span><span id="URLRouter.__init__-125"><a href="#URLRouter.__init__-125"><span class="linenos">125</span></a>                    <span class="n">arg</span><span class="p">,</span> <span class="n">pattern</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">is_endpoint</span><span class="o">=</span><span class="kc">False</span>
+</span><span id="URLRouter.__init__-126"><a href="#URLRouter.__init__-126"><span class="linenos">126</span></a>                <span class="p">)</span>
+</span><span id="URLRouter.__init__-127"><a href="#URLRouter.__init__-127"><span class="linenos">127</span></a>
+</span><span id="URLRouter.__init__-128"><a href="#URLRouter.__init__-128"><span class="linenos">128</span></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">route</span><span class="o">.</span><span class="n">callback</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">route</span><span class="p">,</span> <span class="n">URLResolver</span><span class="p">):</span>
+</span><span id="URLRouter.__init__-129"><a href="#URLRouter.__init__-129"><span class="linenos">129</span></a>                <span class="k">raise</span> <span class="n">ImproperlyConfigured</span><span class="p">(</span>
+</span><span id="URLRouter.__init__-130"><a href="#URLRouter.__init__-130"><span class="linenos">130</span></a>                    <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: include() is not supported in URLRouter. Use nested&quot;</span>
+</span><span id="URLRouter.__init__-131"><a href="#URLRouter.__init__-131"><span class="linenos">131</span></a>                    <span class="s2">&quot; URLRouter instances instead.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">route</span><span class="p">,)</span>
+</span><span id="URLRouter.__init__-132"><a href="#URLRouter.__init__-132"><span class="linenos">132</span></a>                <span class="p">)</span>
 </span></pre></div>
 
 
