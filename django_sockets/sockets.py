@@ -11,7 +11,7 @@ class BaseSocketServer(Broadcaster):
         scope,
         receive,
         send,
-        config={"hosts": [{"address": "redis://0.0.0.0:6379"}]},
+        config=None,
     ):
         """
         Initialize the socket server
@@ -30,13 +30,26 @@ class BaseSocketServer(Broadcaster):
         - config: dict = The configuration for the socket server
             - hosts: list = A list of dictionaries that contain the host information for the socket server
                 - See: django_sockets.pubsub.PubSubLayer docs for more more comprehensive docs on the config parameter
-            - Default: {'hosts': [{'address': 'redis://0.0.0.0:6379'}]}
+            - Default: Calls self.get_config() to get the default configuration
         """
         self.scope = scope
         self.__receive__ = receive
         self.__send__ = send
         self.is_alive = True
+        if config is None:
+            config = self.get_config()
         super().__init__(config=config)
+
+    def get_config(self):
+        """
+        Placeholder method for the get_config method that can be overwritten by the user.
+
+        This method should return the configuration for the socket server.
+
+        This method is called to get a default value if the config parameter is not provided when the socket server
+        object is initialized.
+        """
+        return {"hosts": [{"address": "redis://0.0.0.0:6379"}]}
 
     # Sync Functions
     def send(self, data: [dict | list | str | float | int]):
