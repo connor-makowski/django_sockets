@@ -11,12 +11,11 @@ class Broadcaster:
         self,
         *args,
         loop=None,
-        config={"hosts": [{"address": "redis://0.0.0.0:6379"}]},
+        hosts=[{"address": "redis://0.0.0.0:6379"}],
         **kwargs,
     ):
         self.__loop__ = ensure_loop_running(loop)
-        self.pubsub_layer = self.__get_pubsub_layer__(config=config)
-        self.__usable__ = self.pubsub_layer is not None
+        self.pubsub_layer = PubSubLayer(hosts=hosts)
 
     # Sync Functions
     def broadcast(self, channel: str, data: [dict | list]):
@@ -57,7 +56,6 @@ class Broadcaster:
         - data: [dict|list] = The data to broadcast to the channel
             - Note: This data must be JSON serializable
         """
-        self.__warn_on_not_usable__()
         await self.pubsub_layer.send(str(channel), data)
 
     async def async_subscribe(self, channel: str):
@@ -68,7 +66,6 @@ class Broadcaster:
 
         - channel: str = The channel to subscribe to
         """
-        self.__warn_on_not_usable__()
         await self.pubsub_layer.subscribe(str(channel))
 
     async def async_receive_broadcast(self):
@@ -83,22 +80,3 @@ class Broadcaster:
         """
         data = await self.pubsub_layer.receive()
         return data["channel"], data["data"]
-
-    # Internal Methods
-    def __get_pubsub_layer__(self, config: dict = dict()):
-        """
-        A method to get the PubSubLayer given a configuration dictionary
-        """
-        if "hosts" in config:
-            return PubSubLayer(**config)
-        return None
-
-    def __warn_on_not_usable__(self):
-        """
-        Warn the user if the broadcaster is not usable
-        """
-        if not self.__usable__:
-            logger.log(
-                logging.ERROR,
-                "No hosts provided in settings.DJANGO_SOCKETS_CONFIG. Broadcasting / Subscribing is not possible.",
-            )

@@ -11,7 +11,8 @@ class BaseSocketServer(Broadcaster):
         scope,
         receive,
         send,
-        config=None,
+        hosts=[{"address": "redis://0.0.0.0:6379"}],
+        ws_encoder=json.dumps,
     ):
         """
         Initialize the socket server
@@ -27,29 +28,34 @@ class BaseSocketServer(Broadcaster):
 
         Optional:
 
-        - config: dict = The configuration for the socket server
-            - hosts: list = A list of dictionaries that contain the host information for the socket server
-                - See: django_sockets.pubsub.PubSubLayer docs for more more comprehensive docs on the config parameter
-            - Default: Calls self.get_config() to get the default configuration
+        - hosts: list = A list of dictionaries that contain the host information for the socket server
+            - See the PubSubLayer docs for more comprehensive docs on the hosts parameter
+        - ws_encoder: callable = The function that will be used to encode messages sent to the websocket client
         """
         self.scope = scope
         self.__receive__ = receive
         self.__send__ = send
         self.is_alive = True
-        if config is None:
-            config = self.get_config()
-        super().__init__(config=config)
+        self.hosts = hosts
+        self.ws_encoder = ws_encoder
+        self.configure()
+        super().__init__(hosts=self.hosts)
 
-    def get_config(self):
+    def configure(self):
         """
-        Placeholder method for the get_config method that can be overwritten by the user.
+        Callable that allows the socket server to be configured when launched from the ASGI application
 
-        This method should return the configuration for the socket server.
+        This is a placeholder method that can be overwritten by the user to configure the socket server.
 
-        This method is called to get a default value if the config parameter is not provided when the socket server
-        object is initialized.
+        This method will be called during socket server initialization and any variables set here will take precedence over
+        passed variables during initialization.
+
+        This method should be used to configure:
+
+        - self.hosts: list = A list of dictionaries that contain the host information for the socket server
+            - See the PubSubLayer docs for more comprehensive docs on the hosts parameter
+        - self.ws_encoder: callable = The function that will be used to encode messages sent to the websocket client
         """
-        return {"hosts": [{"address": "redis://0.0.0.0:6379"}]}
 
     # Sync Functions
     def send(self, data: [dict | list | str | float | int]):
@@ -91,10 +97,14 @@ class BaseSocketServer(Broadcaster):
             )
         else:
             try:
-                json_data = json.dumps(data)
+                encoded_data = self.ws_encoder(data)
             except:
-                raise ValueError("Data must be JSON serializable")
-            await self.__send__({"type": "websocket.send", "text": json_data})
+                raise ValueError(
+                    f"Data must be encoder compatible with the passed encoder: {self.ws_encoder}"
+                )
+            await self.__send__(
+                {"type": "websocket.send", "text": encoded_data}
+            )
 
     async def async_handle_received_broadcast(
         self, channel: str, data: [dict | list | str | float | int]
@@ -149,16 +159,15 @@ class BaseSocketServer(Broadcaster):
         Handle all messages that were broadcast to subscribed channels
         """
         # Only handle broadcasts if the broadcaster is usable
-        if self.__usable__:
-            while self.is_alive:
-                try:
-                    channel, data = await self.async_receive_broadcast()
-                    await self.async_handle_received_broadcast(channel, data)
-                # Cleanup on exit
-                except asyncio.CancelledError:
-                    raise asyncio.CancelledError
-                except Exception as e:
-                    raise e
+        while self.is_alive:
+            try:
+                channel, data = await self.async_receive_broadcast()
+                await self.async_handle_received_broadcast(channel, data)
+            # Cleanup on exit
+            except asyncio.CancelledError:
+                raise asyncio.CancelledError
+            except Exception as e:
+                raise e
 
     # Lifecycle Methods
     def __kill__(self):

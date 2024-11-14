@@ -1,10 +1,6 @@
 from django_sockets.sockets import BaseSocketServer
 import asyncio, time
 
-DJANGO_SOCKETS_CONFIG = {
-    "hosts": [{"address": f"redis://0.0.0.0:6379"}],
-}
-
 PASS = False
 
 
@@ -20,7 +16,10 @@ async def send(ws_data):
 
 custom_receive = asyncio.Queue()
 custom_socket_server = CustomSocketServer(
-    scope={}, receive=custom_receive.get, send=send
+    scope={},
+    receive=custom_receive.get,
+    send=send,
+    hosts=[{"address": f"redis://0.0.0.0:6379"}],
 )
 custom_socket_server.start_listeners()
 time.sleep(0.2)

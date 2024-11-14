@@ -1,10 +1,6 @@
 from django_sockets.sockets import BaseSocketServer
 import asyncio, time
 
-DJANGO_SOCKETS_CONFIG = {
-    "hosts": [{"address": f"redis://0.0.0.0:6379"}],
-}
-
 PASS = False
 
 
@@ -17,7 +13,10 @@ async def send(ws_data):
 # Test the socket server cache process
 base_receive = asyncio.Queue()
 base_socket_server = BaseSocketServer(
-    scope={}, receive=base_receive.get, send=send, config=DJANGO_SOCKETS_CONFIG
+    scope={},
+    receive=base_receive.get,
+    send=send,
+    hosts=[{"address": f"redis://0.0.0.0:6379"}],
 )
 base_socket_server.start_listeners()
 base_socket_server.subscribe("basic_function_big")

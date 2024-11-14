@@ -38,7 +38,10 @@ async def send(data):
 
 custom_receive = asyncio.Queue()
 custom_socket_server = CustomSocketServer(
-    scope={"username": "adam"}, receive=custom_receive.get, send=send
+    scope={"username": "adam"},
+    receive=custom_receive.get,
+    send=send,
+    hosts=[{"address": f"redis://0.0.0.0:6379"}],
 )
 custom_socket_server.start_listeners()
 time.sleep(0.2)
