@@ -13,6 +13,7 @@ class BaseSocketServer(Broadcaster):
         send,
         hosts=[{"address": "redis://0.0.0.0:6379"}],
         ws_encoder=json.dumps,
+        ws_encoder_is_bytes=False,
     ):
         """
         Initialize the socket server
@@ -31,6 +32,7 @@ class BaseSocketServer(Broadcaster):
         - hosts: list = A list of dictionaries that contain the host information for the socket server
             - See the PubSubLayer docs for more comprehensive docs on the hosts parameter
         - ws_encoder: callable = The function that will be used to encode messages sent to the websocket client
+        - ws_encoder_is_bytes: bool = Whether or not the ws_encoder function returns bytes
         """
         self.scope = scope
         self.__receive__ = receive
@@ -38,6 +40,7 @@ class BaseSocketServer(Broadcaster):
         self.is_alive = True
         self.hosts = hosts
         self.ws_encoder = ws_encoder
+        self.ws_encoder_is_bytes = ws_encoder_is_bytes
         self.configure()
         super().__init__(hosts=self.hosts)
 
@@ -99,12 +102,18 @@ class BaseSocketServer(Broadcaster):
             try:
                 encoded_data = self.ws_encoder(data)
             except:
-                raise ValueError(
-                    f"Data must be encoder compatible with the passed encoder: {self.ws_encoder}"
+                logger.log(
+                    logging.ERROR,
+                    f"Data encoding failed with: {self.ws_encoder}",
                 )
-            await self.__send__(
-                {"type": "websocket.send", "text": encoded_data}
-            )
+                logger.log(logging.ERROR, f"Error: {e}")
+            try:
+                encoded_type = "bytes" if self.ws_encoder_is_bytes else "text"
+                await self.__send__(
+                    {"type": "websocket.send", encoded_type: encoded_data}
+                )
+            except Exception as e:
+                logger.log(logging.ERROR, f"Error during socket send: {e}")
 
     async def async_handle_received_broadcast(
         self, channel: str, data: [dict | list | str | float | int]
