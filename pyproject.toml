@@ -12,7 +12,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django_sockets"
-version = "2.0.0b2"
+version = "2.0.0b3"
 description = "Simplified Django websocket processes designed to work with cloud caches"
 authors = [
     {name="Connor Makowski", email="conmak@mit.edu"}
@@ -24,7 +24,7 @@ classifiers = [
     'License :: OSI Approved :: MIT License',
     "Operating System :: OS Independent",
 ]
-dependencies = ["django>=5.0.0","asgiref>=3.0.0","redis>=5.0.0","msgpack>=1.0.0"]
+dependencies = ["django>=5.0.0","asgiref>=3.0.0","redis>=5.0.0","msgpack>=1.0.0", "daphne>=4.0.0", "channels>=4.0.0"]
 
 [project.urls]
 "Homepage" = "https://github.com/connor-makowski/django_sockets"
