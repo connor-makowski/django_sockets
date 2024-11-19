@@ -41,3 +41,4 @@ def ensure_loop_running(loop=None):
 
 # Django Channels Utils (To be importable from django_sockets)
 # Do not remove these imports
+from channels.routing import ProtocolTypeRouter, URLRouter

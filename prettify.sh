@@ -14,7 +14,7 @@ printf "done.\n"
 
 # Lint and Autoformat the code in place
 # Remove unused imports
-python -m autoflake --in-place --remove-all-unused-imports --ignore-init-module-imports -r ./django_sockets
+python -m autoflake --in-place --ignore-init-module-imports -r ./django_sockets
 # Perform all other steps
 python -m black --config pyproject.toml ./django_sockets
 python -m black --config pyproject.toml ./test
