@@ -138,7 +138,7 @@ class ShardConnection:
         async with self.lock:
             if channel in self.subscriptions:
                 return
-            await self.__ensure_connection__()
+            await self.__ensure_connection__(calling_fn="subscribe")
             await self.pubsub.subscribe(channel)
             self.subscriptions.add(channel)
         # Drop out of the lock to start the receiver task which requires the lock to be released
@@ -149,7 +149,7 @@ class ShardConnection:
         async with self.lock:
             if channel not in self.subscriptions:
                 return
-            await self.__ensure_connection__()
+            await self.__ensure_connection__(calling_fn="unsubscribe")
             await self.pubsub.unsubscribe(channel)
             self.subscriptions.remove(channel)
         if len(self.subscriptions) == 0:
@@ -158,7 +158,7 @@ class ShardConnection:
     async def publish(self, channel, message):
         channel = self.__get_channel_name__(channel)
         async with self.lock:
-            await self.__ensure_connection__()
+            await self.__ensure_connection__(calling_fn="publish")
             message = self.__serialize__(message)
             # if the message is larger than 1MB, then save it as a uuid in the same cache and send the uuid
             # This helps bypass the 32 MB limit on pubsub queue size for most cache servers
@@ -248,7 +248,7 @@ class ShardConnection:
         await self.flush()
 
     # Utility Methods
-    async def __ensure_connection__(self):
+    async def __ensure_connection__(self, calling_fn: str):
         """
         Ensure that the connection to the cache is established.
 
@@ -264,7 +264,7 @@ class ShardConnection:
             if not is_connected:
                 logger.log(
                     logging.ERROR,
-                    "Could not connect to the cache server. Please check your config and make sure that the cache server is running.",
+                    f"Error: ({calling_fn}) Could not connect to the cache server. Consider trying:\n  - Ensuring that the cache server is running.\n  - Checking your config is correct.\n  - Checking that the cache server is reachable from this server.",
                 )
                 raise ConnectionError("Could not connect to the cache server.")
             self.pubsub = self.connection.pubsub()

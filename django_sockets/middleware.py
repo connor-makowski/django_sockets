@@ -3,6 +3,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Django Channels Middleware (To be importable from django_sockets)
+# Do not remove these imports
+from channels.auth import AuthMiddlewareStack
+
 
 def get_anonymous_user_obj():
     try:

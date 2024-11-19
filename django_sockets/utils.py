@@ -3,6 +3,10 @@ import asyncio, logging, threading
 
 logger = logging.getLogger(__name__)
 
+# Django Channels Utils (To be importable from django_sockets)
+# Do not remove these imports
+from channels.routing import ProtocolTypeRouter, URLRouter
+
 
 def run_in_thread(command, *args, **kwargs):
     """
@@ -37,8 +41,3 @@ def ensure_loop_running(loop=None):
         except:
             logger.log(logging.ERROR, "Event Loop already running")
     return loop
-
-
-# Django Channels Utils (To be importable from django_sockets)
-# Do not remove these imports
-from channels.routing import ProtocolTypeRouter, URLRouter

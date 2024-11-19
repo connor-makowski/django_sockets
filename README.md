@@ -18,7 +18,7 @@ pip install django_sockets
 
 ### Other Requirements
 
-- <b>Redis / Valkey Cache Server</b>: If you plan to broadcast messages across clients and not just respond to individual clients, make sure a cache (valkey or redis) is setup and accessible from your server. 
+- <b>Redis / Valkey Cache Server</b>: If you plan to `broadcast` messages across clients and not just respond to individual clients, make sure a cache (valkey or redis) is setup and accessible from your server. 
     <details>
     <summary>Expand this to setup a local valkey cache using Docker.</summary>
 
@@ -75,11 +75,45 @@ Low level docs: https://connor-makowski.github.io/django_sockets/django_sockets.
         
     class SocketServer(BaseSocketServer):
         def configure(self):
-            # Note: Normally, this should be set in the settings.py file
-            # but is explicitly set here for demonstration purposes
+            '''
+            This method is optional and only needs to be defined 
+            if you are broadcasting or subscribing to channels.
+
+            It is not required if you just plan to respond to
+            individual websocket clients.
+
+            This method is used during the initialization of the
+            socket server to define the cache hosts that will be
+            used for broadcasting and subscribing to channels.
+            '''
             self.hosts = [{"address": "redis://0.0.0.0:6379"}]
 
+        def connect(self):
+            '''
+            This method is optional and is called when a websocket
+            client connects to the server. 
+            
+            It can be used for a variety of purposes such as 
+            subscribing to a channel.
+            '''
+            # When a client connects, create a channel_id attribute 
+            # that is set to the user's id. This allows for user scoped 
+            # channels if you are using the AuthMiddlewareStack.
+            # Note: Since we are not using authentication, all 
+            # clients will be subscribed to the same channel ('None').
+            self.channel_id = str(self.scope['user'].id)
+            self.subscribe(self.channel_id)
+
         def receive(self, data):
+            '''
+            This method is called when a websocket client sends
+            data to the server. It can be used to:
+                - Execute Custom Logic
+                - Update the state of the server
+                - Send data back to the client
+                - Subscribe to a channel
+                - Broadcast data to be sent to subscribed clients
+            '''
             if data.get('command')=='reset':
                 data['counter']=0
             elif data.get('command')=='increment':
@@ -87,22 +121,23 @@ Low level docs: https://connor-makowski.github.io/django_sockets/django_sockets.
             else:
                 raise ValueError("Invalid command")
             # Broadcast the update to all websocket clients 
-            # subscribed to the channel
+            # subscribed to this socket's channel_id
             self.broadcast(self.channel_id, data)
             # Alternatively if you just want to respond to the 
-            # current socket client, just use:
+            # current socket client, just use self.send(data):
             # self.send(data)
-
-        def connect(self):
-            # Subscribe each user to a channel based on their user id
-            # Note: All non authenticated users will be subscribed to the same channel ('None')
-            self.channel_id = str(self.scope['user'].id)
-            print(f"Connected to channel: {self.channel_id}")
-            self.subscribe(self.channel_id)
 
 
     def get_ws_asgi_application():
-        # Note: `AuthMiddlewareStack` is not required, but is useful for user scoped channels
+        '''
+        Define the websocket routes for the Django application.
+
+        You can have multiple websocket routes defined here.
+
+        This is the place to apply any needed middleware.
+        '''
+        # Note: `AuthMiddlewareStack` is not required, but is useful 
+        # for user scoped channels.
         return AuthMiddlewareStack(URLRouter([
             path("ws/", SocketServer.as_asgi),
         ]))
@@ -229,6 +264,9 @@ Low level docs: https://connor-makowski.github.io/django_sockets/django_sockets.
     from django.urls import path
 
     def client_view(request):
+        '''
+        Render the client.html template
+        '''
         return render(request, 'client.html')
 
     urlpatterns = [
@@ -236,20 +274,15 @@ Low level docs: https://connor-makowski.github.io/django_sockets/django_sockets.
         path('', client_view),
     ]
     ```
-    - Note: Normally this would be imported from a views file, but for simplicity it is defined here.
+    - Note: Normally something like `client_view` would be imported from a `views.py` file, but for simplicity it is defined here.
 
 10. Make migrations, migrate, create a superuser and run the server (from the project root)
     ```sh
     python manage.py makemigrations
     python manage.py migrate
-    python manage.py createsuperuser
     python manage.py runserver
     ```
-11. Open your browser and navigate to `http://localhost:8000/` to see the client page.
-    - To get user scopes:
-        - Navigate to `http://localhost:8000/admin` and login with the superuser credentials you created. 
-        - Then go back to the client page and open the browser console. 
-        - You should see the user scope in your terminal logs.
+11. Open your browser and navigate to `http://localhost:8000/` to see the client page. 
     - Open up a second tab and navigate to the same URL. You should see the counter incrementing and resetting in both tabs.
     - Note: The counter state is maintained client side. 
         - If one tab joins after the other has modified the counter, it will not be in sync.
@@ -260,17 +293,24 @@ Low level docs: https://connor-makowski.github.io/django_sockets/django_sockets.
 
 
 
-## Other Examples & Use Cases
+## Non Django Usage
 
 ### Example Subscribing & Broadcasting
 ```py
 from django_sockets.sockets import BaseSocketServer
 import asyncio, time
 
-# Define the send method. Instead of sending data over a 
-# non existent websocket connection, print the data.
-async def send(ws_data):
-    print("WS SENDING:", ws_data)
+# Override the send method to print the data being sent
+async def send(data):
+    """
+    Normally you would not override the send method, but since we are not actually sending data over a websocket connection
+    we are just going to print the data that would be sent.
+
+    This is useful for testing the socket server without having to actually send data over a websocket connection
+
+    Note: This only prints the first 128 characters of the data
+    """
+    print("WS SENDING:", str(data)[:128])
 
 # Create a receive queue to simulate receiving messages from a websocket client
 base_receive = asyncio.Queue()
@@ -281,17 +321,21 @@ base_socket_server = BaseSocketServer(
     send=send, 
     hosts=[{"address": f"redis://0.0.0.0:6379"}]
 )
+
+# Send a message that does not require a cache server
+base_socket_server.send("test message (send)")
 # Start the listeners for the base socket server
 base_socket_server.start_listeners()
 # Subscribe to the test_channel
 base_socket_server.subscribe("test_channel")
 # Broadcast a message to the test_channel
-base_socket_server.broadcast("test_channel", "test message")
+base_socket_server.broadcast("test_channel", "test message (broadcast)")
 # Give the async functions a small amount of time to complete
 time.sleep(.5)
 
 #=> Output:
-#=> WS SENDING: {'type': 'websocket.send', 'text': '"test message"'}
+#=> WS SENDING: {'type': 'websocket.send', 'text': '"test message (send)"'}
+#=> WS SENDING: {'type': 'websocket.send', 'text': '"test message (broadcast)"'}
 ```
 
 ### Example Handle Websocket Messages
@@ -300,6 +344,18 @@ from django_sockets.sockets import BaseSocketServer
 import asyncio, time
 
 class CustomSocketServer(BaseSocketServer):
+    def connect(self):
+        """
+        When the websocket connects, subscribe to the channel of the user.
+
+        This is an important method to override if you want to subscribe to a channel when a user frist connects.
+
+        Otherwise, you can always subscribe to a channel based on the data that is received in the receive method.
+        """
+        print(f"CONNECTED")
+        print(f"SUSCRIBING TO '{self.scope['username']}'")
+        self.subscribe(self.scope['username'])
+
     def receive(self, data):
         """
         When a data message is received from a websocket client:
@@ -313,18 +369,6 @@ class CustomSocketServer(BaseSocketServer):
         print(f"BROADCASTING TO '{self.scope['username']}'")
         self.broadcast(self.scope['username'], data)
 
-    def connect(self):
-        """
-        When the websocket connects, subscribe to the channel of the user.
-
-        This is an important method to override if you want to subscribe to a channel when a user frist connects.
-
-        Otherwise, you can always subscribe to a channel based on the data that is received in the receive method.
-        """
-        print(f"CONNECTED")
-        print(f"SUSCRIBING TO '{self.scope['username']}'")
-        self.subscribe(self.scope['username'])
-
 # Override the send method to print the data being sent
 async def send(data):
     """
@@ -333,9 +377,9 @@ async def send(data):
 
     This is useful for testing the socket server without having to actually send data over a websocket connection
 
-    Note: This only sends the first 64 characters of the data
+    Note: This only sends the first 128 characters of the data
     """
-    print("WS SENDING:", str(data)[:64])
+    print("WS SENDING:", str(data)[:128])
 
 # Create a receive queue to simulate receiving messages from a websocket client
 custom_receive = asyncio.Queue()

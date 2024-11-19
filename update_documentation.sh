@@ -13,15 +13,17 @@ pip install -r requirements.txt > /dev/null
 printf "done.\n"
 
 # Specify versions for documentation purposes
-VERSION="2.0.0b4"
-OLD_DOC_VERSIONS=""
+VERSION="2.0.0b5"
+OLD_DOC_VERSIONS="1.2.0"
 export version_options="$VERSION $OLD_DOC_VERSIONS"
 
 # generate the docs for a version function:
 function generate_docs() {
     INPUT_VERSION=$1
     if [ $INPUT_VERSION != "./" ]; then
-        pip install "./dist/django_sockets-$INPUT_VERSION.tar.gz"
+        if [ $INPUT_VERSION != $VERSION ]; then
+            pip install "./dist/django_sockets-$INPUT_VERSION.tar.gz"
+        fi
     fi
     python3 -m pdoc -o ./docs/$INPUT_VERSION -t ./doc_template django_sockets
 }
