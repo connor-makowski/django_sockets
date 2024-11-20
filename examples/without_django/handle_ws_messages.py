@@ -1,13 +1,19 @@
 from django_sockets.sockets import BaseSocketServer
 import asyncio, time
 
-DJANGO_SOCKETS_CONFIG = {
-    "hosts": [
-        {"address": f"redis://0.0.0.0:6379"}
-    ],
-}
-
 class CustomSocketServer(BaseSocketServer):
+    def connect(self):
+        """
+        When the websocket connects, subscribe to the channel of the user.
+
+        This is an important method to override if you want to subscribe to a channel when a user frist connects.
+
+        Otherwise, you can always subscribe to a channel based on the data that is received in the receive method.
+        """
+        print(f"CONNECTED")
+        print(f"SUSCRIBING TO '{self.scope['username']}'")
+        self.subscribe(self.scope['username'])
+
     def receive(self, data):
         """
         When a data message is received from a websocket client:
@@ -21,18 +27,6 @@ class CustomSocketServer(BaseSocketServer):
         print(f"BROADCASTING TO '{self.scope['username']}'")
         self.broadcast(self.scope['username'], data)
 
-    def connect(self):
-        """
-        When the websocket connects, subscribe to the channel of the user.
-
-        This is an important method to override if you want to subscribe to a channel when a user frist connects.
-
-        Otherwise, you can always subscribe to a channel based on the data that is received in the receive method.
-        """
-        print(f"CONNECTED")
-        print(f"SUSCRIBING TO '{self.scope['username']}'")
-        self.subscribe(self.scope['username'])
-
 # Override the send method to print the data being sent
 async def send(data):
     """
@@ -41,14 +35,19 @@ async def send(data):
 
     This is useful for testing the socket server without having to actually send data over a websocket connection
 
-    Note: This only sends the first 64 characters of the data
+    Note: This only sends the first 128 characters of the data
     """
-    print("WS SENDING:", str(data)[:64])
+    print("WS SENDING:", str(data)[:128])
 
 # Create a receive queue to simulate receiving messages from a websocket client
 custom_receive = asyncio.Queue()
 # Create a custom socket server defined above with a scope of {'username':'adam'}, the custom_receive queue, and the send method defined above
-custom_socket_server = CustomSocketServer(scope={'username':'adam'}, receive=custom_receive.get, send=send)
+custom_socket_server = CustomSocketServer(
+    scope={'username':'adam'}, 
+    receive=custom_receive.get, 
+    send=send, 
+    hosts=[{"address": f"redis://0.0.0.0:6379"}]
+)
 # Start the listeners for the custom socket server
 #    - Websocket Listener - Listens for websocket messages
 #    - Broadcast Listener - Listens for messages that were broadcasted to a channel that the socket server is subscribed to
@@ -73,3 +72,11 @@ time.sleep(.1)
 custom_receive.put_nowait({'type': 'websocket.receive', 'text': '{"data_after_close": "test"}'})
 # Give the async functions a small amount of time to complete
 time.sleep(.1)
+
+#=> Output:
+#=> WS SENDING: {'type': 'websocket.accept'}
+#=> CONNECTED
+#=> SUSCRIBING TO 'adam'
+#=> WS RECEIVED:  {'data': 'test'}
+#=> BROADCASTING TO 'adam'
+#=> WS SENDING: {'type': 'websocket.send', 'text': '{"data": "test"}'}

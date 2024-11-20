@@ -22,6 +22,7 @@ pip install django_sockets
     <details>
     <summary>Expand this to setup a local valkey cache using Docker.</summary>
 
+    - Install Docker: https://docs.docker.com/get-docker/
     - Create and start a valkey cache server using docker:
         ```bash
         docker run -d -p 6379:6379 --name django_sockets_cache valkey/valkey:7
@@ -38,24 +39,36 @@ pip install django_sockets
 
 # Usage
 
-Low level docs: https://connor-makowski.github.io/django_sockets/django_sockets.html
+- Low level docs: https://connor-makowski.github.io/django_sockets/django_sockets.html
+- [Working django and non django examples can be found here](https://github.com/connor-makowski/django_sockets/tree/main/examples).
 
-## Example Usage
+## Examples
+<br/>
+<details>
+<summary> Expand for a simple example websocket counter using Django </summary>
 
-### Use In Django
+### Example: Simple Counter
 
 1. Make sure a redis / valkey cache server is running.
 2. Install Requirements:
+
+    `shell`
     ```bash
     pip install django_sockets
     ```
     - Note: This would normally be done via your `requirements.txt` file and installed in a virtual environment.
 3. Create a new Django project (if you don't already have one) and navigate to the project directory:
+
+    `shell`
     ```sh
     python3 -m django startproject myapp
     cd myapp
     ```
-4. Add `ASGI_APPLICATION` above your `INSTALLED_APPS` and add `'daphne'` to your `INSTALLED_APPS` in your `settings.py` file
+4. Modify your settings file:
+    - Add `ASGI_APPLICATION` above your `INSTALLED_APPS`
+    - Add `'daphne'` to the top of your `INSTALLED_APPS` in your `settings.py` file
+        - Daphne is the django created ASGI server that is used by `django_sockets`.
+    
     `myapp/settings.py`
     ```py
     ASGI_APPLICATION = 'myapp.asgi.application'
@@ -65,6 +78,14 @@ Low level docs: https://connor-makowski.github.io/django_sockets/django_sockets.
         ]
     ```
 5. Create a new file called `ws.py` and place it in `myapp`.
+    - This file will hold the websocket server logic.
+    - Define a `SocketServer` class that extends `BaseSocketServer`.
+        - Define a `configure` method to set the cache hosts.
+        - Define a `connect` method to handle logic when a client connects.
+        - Define a `receive` method to handle logic when a client sends data.
+    - Define a `get_ws_asgi_application` function that returns a URL Router with the websocket routes.
+        - This is where you can apply any needed middleware.
+
     `myapp/ws.py`
     ```py
     from django.urls import path
@@ -142,7 +163,10 @@ Low level docs: https://connor-makowski.github.io/django_sockets/django_sockets.
             path("ws/", SocketServer.as_asgi),
         ]))
     ```
-6. Modify your `asgi.py` file to use the `django_sockets` `ProtocolTypeRouter` and add your app to your websocket routes:
+6. Modify your `asgi.py` file:
+    - Use the `django_sockets` `ProtocolTypeRouter`
+    - Based on the protocol type, return the appropriate ASGI application.
+
     `myapp/asgi.py`
     ```py
     import os
@@ -163,7 +187,12 @@ Low level docs: https://connor-makowski.github.io/django_sockets/django_sockets.
         }
     )
     ```
-7. In the project root, create `templates/client.html` and add the following client code:
+7. In the project root, create `templates/client.html`:
+    - This will be the client side of the websocket connection.
+    - It will contain a simple counter that can be incremented and reset.
+    - The client will send commands to the server to reset or increment the counter.
+    - The server will handle the commands and broadcast or send the updated counter relevant clients.
+
     `templates/client.html`
     ```html
     <!DOCTYPE html>
@@ -236,7 +265,9 @@ Low level docs: https://connor-makowski.github.io/django_sockets/django_sockets.
     </html>
     ```
 
-8. In `settings.py` update `DIRS` in your `TEMPLATES` to include your new template directory:
+8. In `settings.py`:
+    - Update `DIRS` in your `TEMPLATES` to include your new template directory
+
     `myapp/settings.py`
     ```py
     TEMPLATES = [
@@ -256,7 +287,10 @@ Low level docs: https://connor-makowski.github.io/django_sockets/django_sockets.
     ]
     ```
 
-9. In `urls.py` add a simple `clent_view` to render the `client.html` template and set at it the root URL.
+9. In `urls.py`:
+    - Add a simple `clent_view` to render the `client.html` template
+    - Set at it the root URL
+
     `myapp/urls.py`
     ```py
     from django.contrib import admin
@@ -276,151 +310,138 @@ Low level docs: https://connor-makowski.github.io/django_sockets/django_sockets.
     ```
     - Note: Normally something like `client_view` would be imported from a `views.py` file, but for simplicity it is defined here.
 
-10. Make migrations, migrate, create a superuser and run the server (from the project root)
+10. Setup and run the server:
+    - Make any needed migrations (determine if the database needs to be created or updated)
+    - Migrate any changes to bring the database up to date
+    - Run the server
+
+    `shell`
     ```sh
     python manage.py makemigrations
     python manage.py migrate
     python manage.py runserver
     ```
-11. Open your browser and navigate to `http://localhost:8000/` to see the client page. 
-    - Open up a second tab and navigate to the same URL. You should see the counter incrementing and resetting in both tabs.
+11. Open your browser:
+    - Navigate to `http://localhost:8000/` to see the client page. 
+    - Duplicate the tab. 
+        - You should see the counter incrementing and resetting in both tabs.
     - Note: The counter state is maintained client side. 
         - If one tab joins after the other has modified the counter, it will not be in sync.
         - Whichever counter fires first will determine the next counter value for both tabs.
 
+</details>
+<br/><hr/><br/>
+<details>
+<summary> Expand for a simple example websocket counter using Django with Token Authentication </summary>
 
+### Example: Simple Counter Extension 
+#### Use DjangoRestFramework for Token Authentication instead of Session based Authentication
 
+1. Complete all steps in the previous example.
+2. Create a superuser to access the admin page (and be able to login):
+    - Create a superuser
+    - Follow the prompts to create a superuser.
+    - This will allow you to login at `http://localhost:8000/admin/login/` without having to create a custom login page.
 
+    `shell`
+    ```bash
+    python manage.py createsuperuser
+    ```
+3. Install DjangoRestFramework:
 
+    `shell`
+    ```bash
+    pip install djangorestframework
+    ```
+4. Modify your `settings.py` file:
+    - Add `'rest_framework.authtoken'` to the end of your `INSTALLED_APPS`
 
-## Non Django Usage
+    `myapp/settings.py`
+    ```py
+    INSTALLED_APPS = [
+        'daphne',
+        # Your other installed apps,
+        'rest_framework.authtoken', # Add this installed app
+        ]
+    ```
+5. Make and run migrations:
 
-### Example Subscribing & Broadcasting
-```py
-from django_sockets.sockets import BaseSocketServer
-import asyncio, time
+    `shell`
+    ```bash
+    python manage.py makemigrations
+    python manage.py migrate
+    ```
+6. In your view (specified in `myapp.urls.py`):
+    - Ensure you have a DRF Token and pass it to your websocket template.
+    - Force users to login before accessing the websocket client.
+        - In general, you would want to create a custom login page and use the `@login_required` decorator on your view. 
+        - For simplicity, we are just using the admin login page.
+    `myapp/urls.py`
+    ```py
+    from django.contrib import admin
+    from django.shortcuts import render
+    from django.urls import path
 
-# Override the send method to print the data being sent
-async def send(data):
-    """
-    Normally you would not override the send method, but since we are not actually sending data over a websocket connection
-    we are just going to print the data that would be sent.
+    from rest_framework.authtoken.models import Token # Add this import
+    from django.contrib.auth.decorators import login_required # Add this import
 
-    This is useful for testing the socket server without having to actually send data over a websocket connection
+    @login_required(login_url="/admin/login/") # Add this decorator
+    def client_view(request):
+        '''
+        Render the client.html template
+        '''
+        # Get or create a token for the user
+        token, created = Token.objects.get_or_create(user=request.user) # Add this line
+        # Pass the token to the client.html template
+        return render(request, 'client.html', {'token': token}) # Modify this line
 
-    Note: This only prints the first 128 characters of the data
-    """
-    print("WS SENDING:", str(data)[:128])
+    urlpatterns = [
+        path('admin/', admin.site.urls),
+        path('', client_view),
+    ]
+    ```
+5. Update your middleware to use the `DRFTokenAuthMiddleware` instead of the `AuthMiddlewareStack`:
 
-# Create a receive queue to simulate receiving messages from a websocket client
-base_receive = asyncio.Queue()
-# Create a base socket server with a scope of {}
-base_socket_server = BaseSocketServer(
-    scope={}, 
-    receive=base_receive.get, 
-    send=send, 
-    hosts=[{"address": f"redis://0.0.0.0:6379"}]
-)
+    `myapp/ws.py`
+    ```py
+    from django.urls import path
+    from django_sockets.middleware import DRFTokenAuthMiddleware # Modify this line
+    from django_sockets.sockets import BaseSocketServer
+    from django_sockets.utils import URLRouter
 
-# Send a message that does not require a cache server
-base_socket_server.send("test message (send)")
-# Start the listeners for the base socket server
-base_socket_server.start_listeners()
-# Subscribe to the test_channel
-base_socket_server.subscribe("test_channel")
-# Broadcast a message to the test_channel
-base_socket_server.broadcast("test_channel", "test message (broadcast)")
-# Give the async functions a small amount of time to complete
-time.sleep(.5)
+    # Your existing code here
 
-#=> Output:
-#=> WS SENDING: {'type': 'websocket.send', 'text': '"test message (send)"'}
-#=> WS SENDING: {'type': 'websocket.send', 'text': '"test message (broadcast)"'}
-```
+    def get_ws_asgi_application():
+        '''
+        Define the websocket routes for the Django application.
 
-### Example Handle Websocket Messages
-```py
-from django_sockets.sockets import BaseSocketServer
-import asyncio, time
+        You can have multiple websocket routes defined here.
 
-class CustomSocketServer(BaseSocketServer):
-    def connect(self):
-        """
-        When the websocket connects, subscribe to the channel of the user.
+        This is the place to apply any needed middleware.
+        '''
+        return DRFTokenAuthMiddleware(URLRouter([ # Modify this line
+            path("ws/", SocketServer.as_asgi),
+        ]))
+    ```
 
-        This is an important method to override if you want to subscribe to a channel when a user frist connects.
+7. Update your client to pass the token to the websocket server on connection:
+    - Option 1: Use a `sec-websocket-protocol` header to pass the token:
+        
+        `templates/client.html`
+        ```html
+        const websocket = new WebSocket(wsUrl,["Token.{{ token }}"]);
+        ```
+    - Option 2: Use a query parameter to pass the token:
+        
+        `templates/client.html`
+        ```html
+        const wsUrl = "ws://localhost:8000/ws/?token={{ token }}";
+        const websocket = new WebSocket(wsUrl);
+        ```
+8. Run the server and navigate to `http://localhost:8000/` to see the client page.
+    - You will be redirected to the admin login page.
+    - Login with your superuser credentials.
+    - You should now see a functional counter page with websockets scoped to the logged in user.
 
-        Otherwise, you can always subscribe to a channel based on the data that is received in the receive method.
-        """
-        print(f"CONNECTED")
-        print(f"SUSCRIBING TO '{self.scope['username']}'")
-        self.subscribe(self.scope['username'])
-
-    def receive(self, data):
-        """
-        When a data message is received from a websocket client:
-            - Print the data
-            - Broadcast the data to a channel (the same channel that the socket server is subscribed to)
-
-        Normally you would want to override the receive method to do any server side processing of the data that is received
-        then broadcast any changes back to relevant channels.
-        """
-        print("WS RECEIVED: ", data)
-        print(f"BROADCASTING TO '{self.scope['username']}'")
-        self.broadcast(self.scope['username'], data)
-
-# Override the send method to print the data being sent
-async def send(data):
-    """
-    Normally you would not override the send method, but since we are not actually sending data over a websocket connection
-    we are just going to print the data that would be sent.
-
-    This is useful for testing the socket server without having to actually send data over a websocket connection
-
-    Note: This only sends the first 128 characters of the data
-    """
-    print("WS SENDING:", str(data)[:128])
-
-# Create a receive queue to simulate receiving messages from a websocket client
-custom_receive = asyncio.Queue()
-# Create a custom socket server defined above with a scope of {'username':'adam'}, the custom_receive queue, and the send method defined above
-custom_socket_server = CustomSocketServer(
-    scope={'username':'adam'}, 
-    receive=custom_receive.get, 
-    send=send, 
-    hosts=[{"address": f"redis://0.0.0.0:6379"}]
-)
-# Start the listeners for the custom socket server
-#    - Websocket Listener - Listens for websocket messages
-#    - Broadcast Listener - Listens for messages that were broadcasted to a channel that the socket server is subscribed to
-custom_socket_server.start_listeners()
-# Give the async functions a small amount of time to complete
-time.sleep(.1)
-# Simulate a WS connection request
-custom_receive.put_nowait({'type': 'websocket.connect'})
-# Give the async functions a small amount of time to complete
-time.sleep(.1)
-# Simulate a message being received from a WS client
-# This will call the receive method which is defined above
-custom_receive.put_nowait({'type': 'websocket.receive', 'text': '{"data": "test"}'})
-# Give the async functions a small amount of time to complete
-time.sleep(.1)
-# Simulate a WS disconnect request
-custom_receive.put_nowait({'type': 'websocket.disconnect'})
-# Give the async functions a small amount of time to complete
-time.sleep(.1)
-# Simulate a message being received from a WS client after the connection has been closed
-# This will not do anything since the connection has been closed and the listeners have been killed
-custom_receive.put_nowait({'type': 'websocket.receive', 'text': '{"data_after_close": "test"}'})
-# Give the async functions a small amount of time to complete
-time.sleep(.1)
-
-#=> Output:
-#=> WS SENDING: {'type': 'websocket.accept'}
-#=> CONNECTED
-#=> SUSCRIBING TO 'adam'
-#=> WS RECEIVED:  {'data': 'test'}
-#=> BROADCASTING TO 'adam'
-#=> WS SENDING: {'type': 'websocket.send', 'text': '{"data": "test"}'}
-
-```
+</details>
+<br/><hr/><br/>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Client</title>
+</head>
+<body>
+    <h1>WebSocket Client</h1>
+    <div>
+        <button id="resetBtn">Reset Counter</button>
+        <button id="incrementBtn">Increment Counter</button>
+    </div>
+    <div>
+        <h3>Messages:</h3>
+        <pre id="messages"></pre>
+    </div>
+
+    <script>
+        // Connect to the WebSocket server
+        const wsUrl = "ws://localhost:8000/ws/";
+        const websocket = new WebSocket(wsUrl);
+        var counter = 0;
+
+        // DOM elements
+        const messages = document.getElementById("messages");
+        const resetBtn = document.getElementById("resetBtn");
+        const incrementBtn = document.getElementById("incrementBtn");
+
+        // Helper function to display messages
+        const displayMessage = (msg) => {
+            messages.textContent += msg + "\n";
+        };
+
+        // Handle WebSocket events
+        websocket.onopen = () => {
+            displayMessage("WebSocket connection established.");
+        };
+
+        websocket.onmessage = (event) => {
+            displayMessage("Received: " + event.data);
+            counter = JSON.parse(event.data).counter;
+        };
+
+        websocket.onerror = (error) => {
+            displayMessage("WebSocket error: " + error);
+        };
+
+        websocket.onclose = () => {
+            displayMessage("WebSocket connection closed.");
+        };
+
+        // Send 'reset' command
+        resetBtn.addEventListener("click", () => {
+            const command = { command: "reset" };
+            websocket.send(JSON.stringify(command));
+            displayMessage("Sent: " + JSON.stringify(command));
+        });
+
+        // Send 'increment' command
+        incrementBtn.addEventListener("click", () => {
+            const command = { "command": "increment", "counter": counter };
+            websocket.send(JSON.stringify(command));
+            displayMessage("Sent: " + JSON.stringify(command));
+        });
+    </script>
+</body>
+</html>
