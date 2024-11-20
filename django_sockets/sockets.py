@@ -158,7 +158,12 @@ class BaseSocketServer(Broadcaster):
                 elif data["type"] == "websocket.disconnect":
                     self.__kill__()
                 elif data["type"] == "websocket.connect":
-                    await self.__send__({"type": "websocket.accept"})
+                    data = {"type": "websocket.accept"}
+                    if self.scope.get("__chosen_subprotocol__"):
+                        data["subprotocol"] = self.scope.get(
+                            "__chosen_subprotocol__"
+                        )
+                    await self.__send__(data)
                     self.connect()
                 else:
                     raise ValueError(f"Invalid WS data type: {data['type']}")

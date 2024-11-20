@@ -43,7 +43,7 @@
                     <a class="function" href="#get_drf_user">get_drf_user</a>
             </li>
             <li>
-                    <a class="function" href="#get_query_arg">get_query_arg</a>
+                    <a class="function" href="#get_query_key_with_priority">get_query_key_with_priority</a>
             </li>
             <li>
                     <a class="class" href="#DRFTokenAuthMiddleware">DRFTokenAuthMiddleware</a>
@@ -63,7 +63,7 @@
 <footer>
 <select id="version-selector">
     <option value="latest">latest</option>
-        <option value="2.0.0b5">2.0.0b5</option>
+        <option value="2.0.0b6">2.0.0b6</option>
         <option value="1.2.0">1.2.0</option>
 </select>
 <script>
@@ -164,25 +164,44 @@
 </span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a>    <span class="k">return</span> <span class="n">get_anonymous_user_obj</span><span class="p">()</span>
 </span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a>
 </span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a>
-</span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a><span class="k">def</span> <span class="nf">get_query_arg</span><span class="p">(</span><span class="n">query_string</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a>    <span class="k">try</span><span class="p">:</span>
-</span><span id="L-60"><a href="#L-60"><span class="linenos">60</span></a>        <span class="k">return</span> <span class="p">(</span>
-</span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a>            <span class="nb">dict</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">query_string</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&amp;&quot;</span><span class="p">)))</span>
-</span><span id="L-62"><a href="#L-62"><span class="linenos">62</span></a>        <span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
-</span><span id="L-63"><a href="#L-63"><span class="linenos">63</span></a>    <span class="k">except</span><span class="p">:</span>
-</span><span id="L-64"><a href="#L-64"><span class="linenos">64</span></a>        <span class="k">return</span> <span class="kc">None</span>
-</span><span id="L-65"><a href="#L-65"><span class="linenos">65</span></a>
-</span><span id="L-66"><a href="#L-66"><span class="linenos">66</span></a>
-</span><span id="L-67"><a href="#L-67"><span class="linenos">67</span></a><span class="k">class</span> <span class="nc">DRFTokenAuthMiddleware</span><span class="p">:</span>
-</span><span id="L-68"><a href="#L-68"><span class="linenos">68</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">):</span>
-</span><span id="L-69"><a href="#L-69"><span class="linenos">69</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
-</span><span id="L-70"><a href="#L-70"><span class="linenos">70</span></a>
-</span><span id="L-71"><a href="#L-71"><span class="linenos">71</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">):</span>
-</span><span id="L-72"><a href="#L-72"><span class="linenos">72</span></a>        <span class="n">scope</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
-</span><span id="L-73"><a href="#L-73"><span class="linenos">73</span></a>        <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">await</span> <span class="n">get_drf_user</span><span class="p">(</span>
-</span><span id="L-74"><a href="#L-74"><span class="linenos">74</span></a>            <span class="n">get_query_arg</span><span class="p">(</span><span class="n">scope</span><span class="p">[</span><span class="s2">&quot;query_string&quot;</span><span class="p">],</span> <span class="s2">&quot;user_token&quot;</span><span class="p">)</span>
-</span><span id="L-75"><a href="#L-75"><span class="linenos">75</span></a>        <span class="p">)</span>
-</span><span id="L-76"><a href="#L-76"><span class="linenos">76</span></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">)</span>
+</span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a><span class="k">def</span> <span class="nf">get_query_key_with_priority</span><span class="p">(</span>
+</span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a>    <span class="n">query_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">keys</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(),</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span>
+</span><span id="L-60"><a href="#L-60"><span class="linenos">60</span></a><span class="p">):</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a>    <span class="k">try</span><span class="p">:</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos">62</span></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="L-63"><a href="#L-63"><span class="linenos">63</span></a>            <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">keys</span><span class="p">]</span>
+</span><span id="L-64"><a href="#L-64"><span class="linenos">64</span></a>        <span class="n">query_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+</span><span id="L-65"><a href="#L-65"><span class="linenos">65</span></a>            <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">query_string</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&amp;&quot;</span><span class="p">))</span>
+</span><span id="L-66"><a href="#L-66"><span class="linenos">66</span></a>        <span class="p">)</span>
+</span><span id="L-67"><a href="#L-67"><span class="linenos">67</span></a>        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+</span><span id="L-68"><a href="#L-68"><span class="linenos">68</span></a>            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">query_dict</span><span class="p">:</span>
+</span><span id="L-69"><a href="#L-69"><span class="linenos">69</span></a>                <span class="k">return</span> <span class="n">query_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+</span><span id="L-70"><a href="#L-70"><span class="linenos">70</span></a>    <span class="k">except</span><span class="p">:</span>
+</span><span id="L-71"><a href="#L-71"><span class="linenos">71</span></a>        <span class="k">pass</span>
+</span><span id="L-72"><a href="#L-72"><span class="linenos">72</span></a>    <span class="k">return</span> <span class="n">default</span>
+</span><span id="L-73"><a href="#L-73"><span class="linenos">73</span></a>
+</span><span id="L-74"><a href="#L-74"><span class="linenos">74</span></a>
+</span><span id="L-75"><a href="#L-75"><span class="linenos">75</span></a><span class="k">class</span> <span class="nc">DRFTokenAuthMiddleware</span><span class="p">:</span>
+</span><span id="L-76"><a href="#L-76"><span class="linenos">76</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">):</span>
+</span><span id="L-77"><a href="#L-77"><span class="linenos">77</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
+</span><span id="L-78"><a href="#L-78"><span class="linenos">78</span></a>
+</span><span id="L-79"><a href="#L-79"><span class="linenos">79</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">):</span>
+</span><span id="L-80"><a href="#L-80"><span class="linenos">80</span></a>        <span class="n">scope</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
+</span><span id="L-81"><a href="#L-81"><span class="linenos">81</span></a>        <span class="n">headers</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">scope</span><span class="p">[</span><span class="s2">&quot;headers&quot;</span><span class="p">])</span>
+</span><span id="L-82"><a href="#L-82"><span class="linenos">82</span></a>        <span class="n">token</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="L-83"><a href="#L-83"><span class="linenos">83</span></a>        <span class="k">if</span> <span class="sa">b</span><span class="s2">&quot;sec-websocket-protocol&quot;</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">:</span>
+</span><span id="L-84"><a href="#L-84"><span class="linenos">84</span></a>            <span class="n">protocols</span> <span class="o">=</span> <span class="n">headers</span><span class="p">[</span><span class="sa">b</span><span class="s2">&quot;sec-websocket-protocol&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
+</span><span id="L-85"><a href="#L-85"><span class="linenos">85</span></a>            <span class="n">token_protocols</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">protocols</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Token.&quot;</span><span class="p">)]</span>
+</span><span id="L-86"><a href="#L-86"><span class="linenos">86</span></a>            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">token_protocols</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="L-87"><a href="#L-87"><span class="linenos">87</span></a>                <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;__chosen_subprotocol__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">token_protocols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="L-88"><a href="#L-88"><span class="linenos">88</span></a>                <span class="n">token</span> <span class="o">=</span> <span class="n">token_protocols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;Token.&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+</span><span id="L-89"><a href="#L-89"><span class="linenos">89</span></a>        <span class="k">if</span> <span class="n">token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-90"><a href="#L-90"><span class="linenos">90</span></a>            <span class="n">token</span> <span class="o">=</span> <span class="n">get_query_key_with_priority</span><span class="p">(</span>
+</span><span id="L-91"><a href="#L-91"><span class="linenos">91</span></a>                <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;query_string&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;token&quot;</span><span class="p">,</span> <span class="s2">&quot;Token&quot;</span><span class="p">,</span> <span class="s2">&quot;user_token&quot;</span><span class="p">]</span>
+</span><span id="L-92"><a href="#L-92"><span class="linenos">92</span></a>            <span class="p">)</span>
+</span><span id="L-93"><a href="#L-93"><span class="linenos">93</span></a>        <span class="c1"># Update the scope with the user object</span>
+</span><span id="L-94"><a href="#L-94"><span class="linenos">94</span></a>        <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">await</span> <span class="n">get_drf_user</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+</span><span id="L-95"><a href="#L-95"><span class="linenos">95</span></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -292,24 +311,32 @@
     
 
                 </section>
-                <section id="get_query_arg">
-                            <input id="get_query_arg-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+                <section id="get_query_key_with_priority">
+                            <input id="get_query_key_with_priority-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">get_query_arg</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">query_string</span>, </span><span class="param"><span class="n">arg</span>, </span><span class="param"><span class="n">default</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
+        <span class="name">get_query_key_with_priority</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">query_string</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">keys</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>, </span><span class="param"><span class="n">default</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
-                <label class="view-source-button" for="get_query_arg-view-source"><span>View Source</span></label>
+                <label class="view-source-button" for="get_query_key_with_priority-view-source"><span>View Source</span></label>
 
     </div>
-    <a class="headerlink" href="#get_query_arg"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="get_query_arg-59"><a href="#get_query_arg-59"><span class="linenos">59</span></a><span class="k">def</span> <span class="nf">get_query_arg</span><span class="p">(</span><span class="n">query_string</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="get_query_arg-60"><a href="#get_query_arg-60"><span class="linenos">60</span></a>    <span class="k">try</span><span class="p">:</span>
-</span><span id="get_query_arg-61"><a href="#get_query_arg-61"><span class="linenos">61</span></a>        <span class="k">return</span> <span class="p">(</span>
-</span><span id="get_query_arg-62"><a href="#get_query_arg-62"><span class="linenos">62</span></a>            <span class="nb">dict</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">query_string</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&amp;&quot;</span><span class="p">)))</span>
-</span><span id="get_query_arg-63"><a href="#get_query_arg-63"><span class="linenos">63</span></a>        <span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
-</span><span id="get_query_arg-64"><a href="#get_query_arg-64"><span class="linenos">64</span></a>    <span class="k">except</span><span class="p">:</span>
-</span><span id="get_query_arg-65"><a href="#get_query_arg-65"><span class="linenos">65</span></a>        <span class="k">return</span> <span class="kc">None</span>
+    <a class="headerlink" href="#get_query_key_with_priority"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="get_query_key_with_priority-59"><a href="#get_query_key_with_priority-59"><span class="linenos">59</span></a><span class="k">def</span> <span class="nf">get_query_key_with_priority</span><span class="p">(</span>
+</span><span id="get_query_key_with_priority-60"><a href="#get_query_key_with_priority-60"><span class="linenos">60</span></a>    <span class="n">query_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">keys</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(),</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span>
+</span><span id="get_query_key_with_priority-61"><a href="#get_query_key_with_priority-61"><span class="linenos">61</span></a><span class="p">):</span>
+</span><span id="get_query_key_with_priority-62"><a href="#get_query_key_with_priority-62"><span class="linenos">62</span></a>    <span class="k">try</span><span class="p">:</span>
+</span><span id="get_query_key_with_priority-63"><a href="#get_query_key_with_priority-63"><span class="linenos">63</span></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="get_query_key_with_priority-64"><a href="#get_query_key_with_priority-64"><span class="linenos">64</span></a>            <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">keys</span><span class="p">]</span>
+</span><span id="get_query_key_with_priority-65"><a href="#get_query_key_with_priority-65"><span class="linenos">65</span></a>        <span class="n">query_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+</span><span id="get_query_key_with_priority-66"><a href="#get_query_key_with_priority-66"><span class="linenos">66</span></a>            <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">query_string</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&amp;&quot;</span><span class="p">))</span>
+</span><span id="get_query_key_with_priority-67"><a href="#get_query_key_with_priority-67"><span class="linenos">67</span></a>        <span class="p">)</span>
+</span><span id="get_query_key_with_priority-68"><a href="#get_query_key_with_priority-68"><span class="linenos">68</span></a>        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+</span><span id="get_query_key_with_priority-69"><a href="#get_query_key_with_priority-69"><span class="linenos">69</span></a>            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">query_dict</span><span class="p">:</span>
+</span><span id="get_query_key_with_priority-70"><a href="#get_query_key_with_priority-70"><span class="linenos">70</span></a>                <span class="k">return</span> <span class="n">query_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+</span><span id="get_query_key_with_priority-71"><a href="#get_query_key_with_priority-71"><span class="linenos">71</span></a>    <span class="k">except</span><span class="p">:</span>
+</span><span id="get_query_key_with_priority-72"><a href="#get_query_key_with_priority-72"><span class="linenos">72</span></a>        <span class="k">pass</span>
+</span><span id="get_query_key_with_priority-73"><a href="#get_query_key_with_priority-73"><span class="linenos">73</span></a>    <span class="k">return</span> <span class="n">default</span>
 </span></pre></div>
 
 
@@ -327,16 +354,27 @@
 
     </div>
     <a class="headerlink" href="#DRFTokenAuthMiddleware"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="DRFTokenAuthMiddleware-68"><a href="#DRFTokenAuthMiddleware-68"><span class="linenos">68</span></a><span class="k">class</span> <span class="nc">DRFTokenAuthMiddleware</span><span class="p">:</span>
-</span><span id="DRFTokenAuthMiddleware-69"><a href="#DRFTokenAuthMiddleware-69"><span class="linenos">69</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">):</span>
-</span><span id="DRFTokenAuthMiddleware-70"><a href="#DRFTokenAuthMiddleware-70"><span class="linenos">70</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
-</span><span id="DRFTokenAuthMiddleware-71"><a href="#DRFTokenAuthMiddleware-71"><span class="linenos">71</span></a>
-</span><span id="DRFTokenAuthMiddleware-72"><a href="#DRFTokenAuthMiddleware-72"><span class="linenos">72</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">):</span>
-</span><span id="DRFTokenAuthMiddleware-73"><a href="#DRFTokenAuthMiddleware-73"><span class="linenos">73</span></a>        <span class="n">scope</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
-</span><span id="DRFTokenAuthMiddleware-74"><a href="#DRFTokenAuthMiddleware-74"><span class="linenos">74</span></a>        <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">await</span> <span class="n">get_drf_user</span><span class="p">(</span>
-</span><span id="DRFTokenAuthMiddleware-75"><a href="#DRFTokenAuthMiddleware-75"><span class="linenos">75</span></a>            <span class="n">get_query_arg</span><span class="p">(</span><span class="n">scope</span><span class="p">[</span><span class="s2">&quot;query_string&quot;</span><span class="p">],</span> <span class="s2">&quot;user_token&quot;</span><span class="p">)</span>
-</span><span id="DRFTokenAuthMiddleware-76"><a href="#DRFTokenAuthMiddleware-76"><span class="linenos">76</span></a>        <span class="p">)</span>
-</span><span id="DRFTokenAuthMiddleware-77"><a href="#DRFTokenAuthMiddleware-77"><span class="linenos">77</span></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="DRFTokenAuthMiddleware-76"><a href="#DRFTokenAuthMiddleware-76"><span class="linenos">76</span></a><span class="k">class</span> <span class="nc">DRFTokenAuthMiddleware</span><span class="p">:</span>
+</span><span id="DRFTokenAuthMiddleware-77"><a href="#DRFTokenAuthMiddleware-77"><span class="linenos">77</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">):</span>
+</span><span id="DRFTokenAuthMiddleware-78"><a href="#DRFTokenAuthMiddleware-78"><span class="linenos">78</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
+</span><span id="DRFTokenAuthMiddleware-79"><a href="#DRFTokenAuthMiddleware-79"><span class="linenos">79</span></a>
+</span><span id="DRFTokenAuthMiddleware-80"><a href="#DRFTokenAuthMiddleware-80"><span class="linenos">80</span></a>    <span class="k">async</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">):</span>
+</span><span id="DRFTokenAuthMiddleware-81"><a href="#DRFTokenAuthMiddleware-81"><span class="linenos">81</span></a>        <span class="n">scope</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
+</span><span id="DRFTokenAuthMiddleware-82"><a href="#DRFTokenAuthMiddleware-82"><span class="linenos">82</span></a>        <span class="n">headers</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">scope</span><span class="p">[</span><span class="s2">&quot;headers&quot;</span><span class="p">])</span>
+</span><span id="DRFTokenAuthMiddleware-83"><a href="#DRFTokenAuthMiddleware-83"><span class="linenos">83</span></a>        <span class="n">token</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="DRFTokenAuthMiddleware-84"><a href="#DRFTokenAuthMiddleware-84"><span class="linenos">84</span></a>        <span class="k">if</span> <span class="sa">b</span><span class="s2">&quot;sec-websocket-protocol&quot;</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">:</span>
+</span><span id="DRFTokenAuthMiddleware-85"><a href="#DRFTokenAuthMiddleware-85"><span class="linenos">85</span></a>            <span class="n">protocols</span> <span class="o">=</span> <span class="n">headers</span><span class="p">[</span><span class="sa">b</span><span class="s2">&quot;sec-websocket-protocol&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
+</span><span id="DRFTokenAuthMiddleware-86"><a href="#DRFTokenAuthMiddleware-86"><span class="linenos">86</span></a>            <span class="n">token_protocols</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">protocols</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Token.&quot;</span><span class="p">)]</span>
+</span><span id="DRFTokenAuthMiddleware-87"><a href="#DRFTokenAuthMiddleware-87"><span class="linenos">87</span></a>            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">token_protocols</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="DRFTokenAuthMiddleware-88"><a href="#DRFTokenAuthMiddleware-88"><span class="linenos">88</span></a>                <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;__chosen_subprotocol__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">token_protocols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="DRFTokenAuthMiddleware-89"><a href="#DRFTokenAuthMiddleware-89"><span class="linenos">89</span></a>                <span class="n">token</span> <span class="o">=</span> <span class="n">token_protocols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;Token.&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+</span><span id="DRFTokenAuthMiddleware-90"><a href="#DRFTokenAuthMiddleware-90"><span class="linenos">90</span></a>        <span class="k">if</span> <span class="n">token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="DRFTokenAuthMiddleware-91"><a href="#DRFTokenAuthMiddleware-91"><span class="linenos">91</span></a>            <span class="n">token</span> <span class="o">=</span> <span class="n">get_query_key_with_priority</span><span class="p">(</span>
+</span><span id="DRFTokenAuthMiddleware-92"><a href="#DRFTokenAuthMiddleware-92"><span class="linenos">92</span></a>                <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;query_string&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;token&quot;</span><span class="p">,</span> <span class="s2">&quot;Token&quot;</span><span class="p">,</span> <span class="s2">&quot;user_token&quot;</span><span class="p">]</span>
+</span><span id="DRFTokenAuthMiddleware-93"><a href="#DRFTokenAuthMiddleware-93"><span class="linenos">93</span></a>            <span class="p">)</span>
+</span><span id="DRFTokenAuthMiddleware-94"><a href="#DRFTokenAuthMiddleware-94"><span class="linenos">94</span></a>        <span class="c1"># Update the scope with the user object</span>
+</span><span id="DRFTokenAuthMiddleware-95"><a href="#DRFTokenAuthMiddleware-95"><span class="linenos">95</span></a>        <span class="n">scope</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">await</span> <span class="n">get_drf_user</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+</span><span id="DRFTokenAuthMiddleware-96"><a href="#DRFTokenAuthMiddleware-96"><span class="linenos">96</span></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -352,8 +390,8 @@
 
     </div>
     <a class="headerlink" href="#DRFTokenAuthMiddleware.__init__"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="DRFTokenAuthMiddleware.__init__-69"><a href="#DRFTokenAuthMiddleware.__init__-69"><span class="linenos">69</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">):</span>
-</span><span id="DRFTokenAuthMiddleware.__init__-70"><a href="#DRFTokenAuthMiddleware.__init__-70"><span class="linenos">70</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="DRFTokenAuthMiddleware.__init__-77"><a href="#DRFTokenAuthMiddleware.__init__-77"><span class="linenos">77</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">):</span>
+</span><span id="DRFTokenAuthMiddleware.__init__-78"><a href="#DRFTokenAuthMiddleware.__init__-78"><span class="linenos">78</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
 </span></pre></div>
 
 

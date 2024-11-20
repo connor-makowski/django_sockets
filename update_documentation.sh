@@ -13,7 +13,7 @@ pip install -r requirements.txt > /dev/null
 printf "done.\n"
 
 # Specify versions for documentation purposes
-VERSION="2.0.0b5"
+VERSION="2.0.0b6"
 OLD_DOC_VERSIONS="1.2.0"
 export version_options="$VERSION $OLD_DOC_VERSIONS"
 

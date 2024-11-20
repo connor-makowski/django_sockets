@@ -12,7 +12,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django_sockets"
-version = "2.0.0b5"
+version = "2.0.0b6"
 description = "Simplified Django websocket processes designed to work with cloud caches"
 authors = [
     {name="Connor Makowski", email="conmak@mit.edu"}
