@@ -29,7 +29,7 @@ class SocketServer(BaseSocketServer):
         '''
         # When a client connects, create a channel_id attribute 
         # that is set to the user's id. This allows for user scoped 
-        # channels if you are using the AuthMiddlewareStack.
+        # channels if you are using the an auth middleware.
         # Note: Since we are not using authentication, all 
         # clients will be subscribed to the same channel ('None').
         self.channel_id = str(self.scope['user'].id)

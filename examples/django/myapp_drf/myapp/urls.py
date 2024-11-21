@@ -28,8 +28,8 @@ def client_view(request):
     '''
     # Get or create a token for the user
     token, created = Token.objects.get_or_create(user=request.user)
-    # Pass the token to the client.html template
-    return render(request, 'client.html', {'token': token})
+    # Pass the user and token to the client.html template
+    return render(request, 'client.html', {'user': request.user, 'token': token})
 
 urlpatterns = [
     path('admin/', admin.site.urls),

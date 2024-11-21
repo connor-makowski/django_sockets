@@ -22,7 +22,8 @@ def client_view(request):
     '''
     Render the client.html template
     '''
-    return render(request, 'client.html')
+    # Pass the user to the client.html template
+    return render(request, 'client.html', {'user': request.user})
 
 urlpatterns = [
     path('admin/', admin.site.urls),

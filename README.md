@@ -43,9 +43,6 @@ pip install django_sockets
 - [Working django and non django examples can be found here](https://github.com/connor-makowski/django_sockets/tree/main/examples).
 
 ## Examples
-<br/>
-<details>
-<summary> Expand for a simple example websocket counter using Django </summary>
 
 ### Example: Simple Counter
 
@@ -89,7 +86,7 @@ pip install django_sockets
     `myapp/ws.py`
     ```py
     from django.urls import path
-    from django_sockets.middleware import AuthMiddlewareStack
+    from django_sockets.middleware import SessionAuthMiddleware
     from django_sockets.sockets import BaseSocketServer
     from django_sockets.utils import URLRouter
 
@@ -119,7 +116,7 @@ pip install django_sockets
             '''
             # When a client connects, create a channel_id attribute 
             # that is set to the user's id. This allows for user scoped 
-            # channels if you are using the AuthMiddlewareStack.
+            # channels if you are using auth middleware.
             # Note: Since we are not using authentication, all 
             # clients will be subscribed to the same channel ('None').
             self.channel_id = str(self.scope['user'].id)
@@ -157,9 +154,9 @@ pip install django_sockets
 
         This is the place to apply any needed middleware.
         '''
-        # Note: `AuthMiddlewareStack` is not required, but is useful 
+        # Note: `SessionAuthMiddleware` is not required, but is useful 
         # for user scoped channels.
-        return AuthMiddlewareStack(URLRouter([
+        return SessionAuthMiddleware(URLRouter([
             path("ws/", SocketServer.as_asgi),
         ]))
     ```
@@ -204,6 +201,7 @@ pip install django_sockets
     </head>
     <body>
         <h1>WebSocket Client</h1>
+        <h2>User: {{ user.username }}</h2>
         <div>
             <button id="resetBtn">Reset Counter</button>
             <button id="incrementBtn">Increment Counter</button>
@@ -301,7 +299,8 @@ pip install django_sockets
         '''
         Render the client.html template
         '''
-        return render(request, 'client.html')
+        # Pass the user to the client.html template
+        return render(request, 'client.html', {'user': request.user})
 
     urlpatterns = [
         path('admin/', admin.site.urls),
@@ -328,32 +327,32 @@ pip install django_sockets
     - Note: The counter state is maintained client side. 
         - If one tab joins after the other has modified the counter, it will not be in sync.
         - Whichever counter fires first will determine the next counter value for both tabs.
+    - Note: Since you have not logged in yet, your Auth Middleware will just return an Anonymous User.
+        - This means that all users are subscribed to the same channel from the user id ('None').
+        - Once users are logged in, they will be subscribed to their own user id channel.
+12. To avoid creating a custom login page, we will just use a superuser and take advantage of the admin login page.
+    - To create a superuser, you can run the following command:
+        ```bash
+        python manage.py createsuperuser
+        ```
+        - Follow the prompts to create a superuser.
+    - Login at `http://localhost:8000/admin/login/?next=/` with your superuser credentials.
+        - You can logout by navigating to `http://localhost:8000/admin/` and clicking the logout button.
+    - You should now see a functional counter page with websockets scoped to the logged in user.
 
-</details>
 <br/><hr/><br/>
-<details>
-<summary> Expand for a simple example websocket counter using Django with Token Authentication </summary>
 
 ### Example: Simple Counter Extension 
 #### Use DjangoRestFramework for Token Authentication instead of Session based Authentication
 
 1. Complete all steps in the previous example.
-2. Create a superuser to access the admin page (and be able to login):
-    - Create a superuser
-    - Follow the prompts to create a superuser.
-    - This will allow you to login at `http://localhost:8000/admin/login/` without having to create a custom login page.
-
-    `shell`
-    ```bash
-    python manage.py createsuperuser
-    ```
-3. Install DjangoRestFramework:
+2. Install DjangoRestFramework:
 
     `shell`
     ```bash
     pip install djangorestframework
     ```
-4. Modify your `settings.py` file:
+3. Modify your `settings.py` file:
     - Add `'rest_framework.authtoken'` to the end of your `INSTALLED_APPS`
 
     `myapp/settings.py`
@@ -364,14 +363,14 @@ pip install django_sockets
         'rest_framework.authtoken', # Add this installed app
         ]
     ```
-5. Make and run migrations:
+4. Make and run migrations:
 
     `shell`
     ```bash
     python manage.py makemigrations
     python manage.py migrate
     ```
-6. In your view (specified in `myapp.urls.py`):
+5. In your view (specified in `myapp.urls.py`):
     - Ensure you have a DRF Token and pass it to your websocket template.
     - Force users to login before accessing the websocket client.
         - In general, you would want to create a custom login page and use the `@login_required` decorator on your view. 
@@ -392,15 +391,15 @@ pip install django_sockets
         '''
         # Get or create a token for the user
         token, created = Token.objects.get_or_create(user=request.user) # Add this line
-        # Pass the token to the client.html template
-        return render(request, 'client.html', {'token': token}) # Modify this line
+        # Pass the user and token to the client.html template
+        return render(request, 'client.html', {'user': request.user, 'token': token}) # Modify this line
 
     urlpatterns = [
         path('admin/', admin.site.urls),
         path('', client_view),
     ]
     ```
-5. Update your middleware to use the `DRFTokenAuthMiddleware` instead of the `AuthMiddlewareStack`:
+6. Update your middleware to use the `DRFTokenAuthMiddleware` instead of the `SessionAuthMiddleware`:
 
     `myapp/ws.py`
     ```py
@@ -443,5 +442,4 @@ pip install django_sockets
     - Login with your superuser credentials.
     - You should now see a functional counter page with websockets scoped to the logged in user.
 
-</details>
 <br/><hr/><br/>

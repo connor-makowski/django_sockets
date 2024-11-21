@@ -1,5 +1,5 @@
 from django.urls import path
-from django_sockets.middleware import AuthMiddlewareStack
+from django_sockets.middleware import SessionAuthMiddleware
 from django_sockets.sockets import BaseSocketServer
 from django_sockets.utils import URLRouter
 
@@ -29,7 +29,7 @@ class SocketServer(BaseSocketServer):
         '''
         # When a client connects, create a channel_id attribute 
         # that is set to the user's id. This allows for user scoped 
-        # channels if you are using the AuthMiddlewareStack.
+        # channels if you are using auth middleware.
         # Note: Since we are not using authentication, all 
         # clients will be subscribed to the same channel ('None').
         self.channel_id = str(self.scope['user'].id)
@@ -67,8 +67,8 @@ def get_ws_asgi_application():
 
     This is the place to apply any needed middleware.
     '''
-    # Note: `AuthMiddlewareStack` is not required, but is useful 
+    # Note: `SessionAuthMiddleware` is not required, but is useful 
     # for user scoped channels.
-    return AuthMiddlewareStack(URLRouter([
+    return SessionAuthMiddleware(URLRouter([
         path("ws/", SocketServer.as_asgi),
     ]))

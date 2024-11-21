@@ -7,6 +7,7 @@
 </head>
 <body>
     <h1>WebSocket Client</h1>
+    <h2>User: {{ user.username }}</h2>
     <div>
         <button id="resetBtn">Reset Counter</button>
         <button id="incrementBtn">Increment Counter</button>
@@ -18,9 +19,9 @@
 
     <script>
         // Connect to the WebSocket server
-        const wsUrl = "ws://localhost:8000/ws/";
+        const wsUrl = "ws://localhost:8000/ws/?token={{ token }}";
         // Pass the token in the header as a subprotocol with the WebSocket connection request
-        const websocket = new WebSocket(wsUrl,["Token.{{ token }}"]);
+        const websocket = new WebSocket(wsUrl);
         var counter = 0;
 
         // DOM elements

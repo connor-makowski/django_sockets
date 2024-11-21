@@ -58,6 +58,7 @@ class BaseSocketServer(Broadcaster):
         - self.hosts: list = A list of dictionaries that contain the host information for the socket server
             - See the PubSubLayer docs for more comprehensive docs on the hosts parameter
         - self.ws_encoder: callable = The function that will be used to encode messages sent to the websocket client
+        - self.ws_encoder_is_bytes: bool = Whether or not the ws_encoder function returns bytes
         """
 
     # Sync Functions
