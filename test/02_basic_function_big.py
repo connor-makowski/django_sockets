@@ -1,5 +1,5 @@
 from django_sockets.sockets import BaseSocketServer
-import asyncio, time
+import asyncio, time, os
 
 PASS = False
 
@@ -16,7 +16,11 @@ base_socket_server = BaseSocketServer(
     scope={},
     receive=base_receive.get,
     send=send,
-    hosts=[{"address": f"redis://0.0.0.0:6379"}],
+    hosts=[
+        {
+            "address": f"redis://{os.environ.get('CACHE_HOST')}:{os.environ.get('CACHE_PORT')}"
+        }
+    ],
 )
 base_socket_server.start_listeners()
 base_socket_server.subscribe("basic_function_big")

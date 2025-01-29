@@ -1,5 +1,5 @@
 from django_sockets.sockets import BaseSocketServer
-import asyncio, time
+import asyncio, time, os
 
 CONNECTION_ACCEPTED = False
 CONNECT_FN_CALLED = False
@@ -41,7 +41,11 @@ custom_socket_server = CustomSocketServer(
     scope={"username": "adam"},
     receive=custom_receive.get,
     send=send,
-    hosts=[{"address": f"redis://0.0.0.0:6379"}],
+    hosts=[
+        {
+            "address": f"redis://{os.environ.get('CACHE_HOST')}:{os.environ.get('CACHE_PORT')}"
+        }
+    ],
 )
 custom_socket_server.start_listeners()
 time.sleep(0.2)
