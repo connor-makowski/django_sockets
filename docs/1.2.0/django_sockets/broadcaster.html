@@ -66,15 +66,23 @@
 <footer>
 <select id="version-selector">
     <option value="latest">latest</option>
-        <option value="2.0.0b7">2.0.0b7</option>
+        <option value="2.0.0">2.0.0</option>
         <option value="1.2.0">1.2.0</option>
+        <option value="1.1.0">1.1.0</option>
+        <option value="1.0.0">1.0.0</option>
 </select>
 <script>
+    var split_at = "/docs/";
+    if (window.location.href.includes('github.io')) {
+        split_at = "github.io/django_sockets/";
+    }
     // Set the currently selected option to be equivalent to that of the url version.
-    var version = window.location.pathname.split('/docs/')[1].split('/')[0];
-    // If version includes the string 'django_channels', then it is a special version that is not a version number.
-    if (version.includes('django_channels')) {
-        version = 'latest';
+    var version = 'latest';
+    var version_path = window.location.href.split(split_at)[1];
+    if (version_path.includes('/')) {
+        if (version_path.split('/')[0].match(/^\d+\.\d+\.\d+$/)) {
+            version = version_path.split('/')[0];
+        }
     }
     document.getElementById('version-selector').value = version;
 
@@ -85,8 +93,7 @@
         } else {
             var new_url = version + '/';
         }
-        var path = window.location.pathname;
-        var url = path.split('/docs/')[0]+ '/docs/' + new_url + 'index.html';
+        var url = window.location.href.split(split_at)[0] + split_at + new_url + 'index.html';
         console.log(url);
         window.location.href = url;
     }
