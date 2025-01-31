@@ -11,6 +11,11 @@ if [ -z "$VIRTUAL_ENV" ]; then
 fi
 pip install -r requirements.txt > /dev/null
 printf "done.\n"
+# Make a temp init.py that only has the content below the __README_CONTENT_IS_COPIED_ABOVE__ line
+cp README.md django_sockets/__init__.py
+sed -i '1s/^/\"\"\"\n/' django_sockets/__init__.py
+echo "\"\"\"" >> django_sockets/__init__.py
+
 
 # Specify versions for documentation purposes
 VERSION="2.0.0"
