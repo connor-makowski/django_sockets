@@ -1,16 +1,6 @@
-# Change to the script directory
-cd $(dirname "$0")
-# Ensure a properly setup virtual environment
-printf "Setting up the virtual environment..."
-python3 -m virtualenv venv > /dev/null
-source venv/bin/activate
-# If not in an venv, do not continue
-if [ -z "$VIRTUAL_ENV" ]; then
-    printf "\nNot in a virtual environment. Exiting."
-    exit 1
-fi
-pip install -r requirements.txt > /dev/null
-printf "done.\n"
+#!/bin/bash
+cd /app/
+
 # Make a temp init.py that only has the content below the __README_CONTENT_IS_COPIED_ABOVE__ line
 cp README.md django_sockets/__init__.py
 sed -i '1s/^/\"\"\"\n/' django_sockets/__init__.py
@@ -30,7 +20,7 @@ function generate_docs() {
             pip install "./dist/django_sockets-$INPUT_VERSION.tar.gz"
         fi
     fi
-    python3 -m pdoc -o ./docs/$INPUT_VERSION -t ./doc_template django_sockets
+    pdoc -o ./docs/$INPUT_VERSION -t ./doc_template django_sockets
 }
 
 # Generate the docs for the current version
