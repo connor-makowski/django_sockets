@@ -37,48 +37,6 @@ pip install django_sockets
         ```
     </details>
 
-## Motivation
-
-How We Cut Our AWS Bill in Half (and Accidentally Built an Open Source Tool Along the Way)
-
-Let me tell you a story about websockets, AWS bills, and the kind of "oops" that turns into opportunity.
-
-At the MIT CAVE Lab, we run a lot of real time Django apps. Think websocket connections flying in every direction. To keep things snappy, we leaned on Redis (or its less money focused cousin, Valkey) for caching. But before long, one thing became painfully clear. Our dedicated cache servers were guzzling cash faster than my 3 year old can down his chocolate milk.
-
-Jokes aside, our cache costs alone were eating up nearly 50% of our AWS bill. Time to rethink our approach.
-
-Enter AWS Serverless Cache, our white knight. This shiny service is built for Valkey, scales automatically, and promises cost-effectiveness. It sounded perfect.
-
-Turns out the exterior armor had big muscles, but the interior did not quite fill them out.
-
-In order to scale "automagically," AWS serverless caches don’t support some classic Redis features, like the keys command. This is totally fair. it’s in the documentation (not the marketing, of course), but I’ll be the first to admit I didn’t double-check. Big mistake. Because our socket framework of choice, "django_channels", relies on exactly those missing features. We wanted a knight with a shileld and sword, but it looked like the shield was missing at the cost of a much cheaper two-handed sword.
-
-So now we had a dilemma. We could either give up on serverless caching and ask for a king's ransom to pay our AWS bill each month or somehow make Django work with the limitations of the serverless model. 
-
-Spoiler alert! There was no magic drop in fix. And no existing tools that really fit our use case.
-
-So we did the only thing left to do. The exact thing top brass always prohibits. We built our own.
-
-We rolled up our sleeves, caffeinated aggressively, and dove deep into the tangled world of Django, websockets, and caching. We started from scratch. We cut down trees that got in the way of seeing the forest. We re-planted them when we realized the forest was gone. It was messy. It was frustrating. It involved more trial and error than I’d like to admit. 
-
-We were determined to make it work. After we get it working, we wanted to add some extra features, some of them we built ourselves and others we borrowed from existing tools (with attributions and references in the code, of course, we're not monsters).
-
-Eventually, we emerged from the battlefield with a solution that not only worked but also felt elegant. It was like finding a hidden gem in a pile of rocks. Well, maybe not a gem, but at least a shiny pebble.
-
-Introducing: django_sockets, our custom package designed to play nice with AWS serverless caches. It keeps websocket communication snappy, trims the fat from traditional caching approaches, and stays fully compatible with Django.
-
-The impact? We slashed our cache costs by 90%, and our total AWS bill was cut nearly in half. Scaling headaches for caches were eliminated. Massive win. And the best part? We realized we weren’t alone. Others in the Django community were hitting the same wall.
-
-So we cleaned it up, made it reusable, and open-sourced the whole thing.
-
-We’re super excited to share this with the community and hopefully help others save some time, money, and stress.
-
-If you’re wrangling sockets in Django apps and watching your AWS bill spiral, take a look at django_sockets.
-
-And if you’ve hit similar bumps trying to modernize your infrastructure, I’d love to hear your story too.
-
-Radical Honesty Disclaimer: This section was written by me (Connor) with some editing from AI Chatbots
-
 ## Usage
 
 - Low level docs: https://connor-makowski.github.io/django_sockets/django_sockets.html
