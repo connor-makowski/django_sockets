@@ -5,7 +5,7 @@
 
 Simplified Django websocket processes designed to work with cloud caches (valkey|redis on single|distributed|serverless)
 
-# Setup
+## Setup
 
 ### General
 
@@ -38,7 +38,7 @@ pip install django_sockets
         ```
     </details>
 
-# Usage
+## Usage
 
 - Low level docs: https://connor-makowski.github.io/django_sockets/django_sockets.html
 - [Working django and non django examples can be found here](https://github.com/connor-makowski/django_sockets/tree/main/examples).
@@ -443,4 +443,7 @@ pip install django_sockets
     - Login with your superuser credentials.
     - You should now see a functional counter page with websockets scoped to the logged in user.
 
-<br/><hr/><br/>"""
+<br/><hr/><br/>
+
+## Attributions
+Some of the code in this repository is formed similarly to or inspired by channels_redis as well as django_channels itself. Similarly this work was motivated by some missing features from those packages. Many thanks to them for their original work and inspiration."""
