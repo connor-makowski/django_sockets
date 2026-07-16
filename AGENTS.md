@@ -34,7 +34,6 @@ Dockerfile           # Testing/linting container definition
 noxfile.py           # Nox configuration for running pytest across multiple Python versions
 pyproject.toml       # Project metadata, black/pytest config, and dependencies
 setup.cfg            # Setup metadata and package options
-run.sh               # Local wrapper to orchestrate docker network, redis/valkey cache, and run tests/prettify/docs
 publish.sh           # PyPI publishing script — DO NOT RUN
 ```
 
@@ -95,7 +94,7 @@ class SocketServer(BaseSocketServer):
 - **Python version**: >= 3.10
 - **Environment Management**: Use `uv`. Run `uv sync --extra dev` after modifying dependencies.
 - **Documentation**: The primary documentation is `README.md`. `django_sockets/__init__.py` has its docstring generated dynamically from `README.md` during the release process (by `utils/docs.py`). **Do not edit the docstring in `__init__.py` directly.**
-- **Code style**: Use `uv run utils/prettify.py` (or `./run.sh prettify`) to clean and format Python code.
+- **Code style**: Use `uv run utils/prettify.py` to clean and format Python code.
 
 ---
 
