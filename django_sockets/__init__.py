@@ -19,7 +19,7 @@ pip install django_sockets
 
 ### Other Requirements
 
-- <b>Redis / Valkey Cache Server</b>: If you plan to `broadcast` messages across clients and not just respond to individual clients, make sure a cache (valkey or redis) is setup and accessible from your server. 
+- <b>Redis / Valkey Cache Server</b>: If you plan to `broadcast` messages across clients and not just respond to individual clients, make sure a cache (valkey or redis) is setup and accessible from your server.
     <details>
     <summary>Expand this to setup a local valkey cache using Docker.</summary>
 
@@ -66,7 +66,7 @@ pip install django_sockets
     - Add `ASGI_APPLICATION` above your `INSTALLED_APPS`
     - Add `'daphne'` to the top of your `INSTALLED_APPS` in your `settings.py` file
         - Daphne is the django created ASGI server that is used by `django_sockets`.
-    
+
     `myapp/settings.py`
     ```py
     ASGI_APPLICATION = 'myapp.asgi.application'
@@ -91,11 +91,11 @@ pip install django_sockets
     from django_sockets.sockets import BaseSocketServer
     from django_sockets.utils import URLRouter
 
-        
+
     class SocketServer(BaseSocketServer):
         def configure(self):
             '''
-            This method is optional and only needs to be defined 
+            This method is optional and only needs to be defined
             if you are broadcasting or subscribing to channels.
 
             It is not required if you just plan to respond to
@@ -110,15 +110,15 @@ pip install django_sockets
         def connect(self):
             '''
             This method is optional and is called when a websocket
-            client connects to the server. 
-            
-            It can be used for a variety of purposes such as 
+            client connects to the server.
+
+            It can be used for a variety of purposes such as
             subscribing to a channel.
             '''
-            # When a client connects, create a channel_id attribute 
-            # that is set to the user's id. This allows for user scoped 
+            # When a client connects, create a channel_id attribute
+            # that is set to the user's id. This allows for user scoped
             # channels if you are using auth middleware.
-            # Note: Since we are not using authentication, all 
+            # Note: Since we are not using authentication, all
             # clients will be subscribed to the same channel ('None').
             self.channel_id = str(self.scope['user'].id)
             self.subscribe(self.channel_id)
@@ -139,10 +139,10 @@ pip install django_sockets
                 data['counter']+=1
             else:
                 raise ValueError("Invalid command")
-            # Broadcast the update to all websocket clients 
+            # Broadcast the update to all websocket clients
             # subscribed to this socket's channel_id
             self.broadcast(self.channel_id, data)
-            # Alternatively if you just want to respond to the 
+            # Alternatively if you just want to respond to the
             # current socket client, just use self.send(data):
             # self.send(data)
 
@@ -155,7 +155,7 @@ pip install django_sockets
 
         This is the place to apply any needed middleware.
         '''
-        # Note: `SessionAuthMiddleware` is not required, but is useful 
+        # Note: `SessionAuthMiddleware` is not required, but is useful
         # for user scoped channels.
         return SessionAuthMiddleware(URLRouter([
             path("ws/", SocketServer.as_asgi),
@@ -322,10 +322,10 @@ pip install django_sockets
     python manage.py runserver
     ```
 11. Open your browser:
-    - Navigate to `http://localhost:8000/` to see the client page. 
-    - Duplicate the tab. 
+    - Navigate to `http://localhost:8000/` to see the client page.
+    - Duplicate the tab.
         - You should see the counter incrementing and resetting in both tabs.
-    - Note: The counter state is maintained client side. 
+    - Note: The counter state is maintained client side.
         - If one tab joins after the other has modified the counter, it will not be in sync.
         - Whichever counter fires first will determine the next counter value for both tabs.
     - Note: Since you have not logged in yet, your Auth Middleware will just return an Anonymous User.
@@ -343,7 +343,7 @@ pip install django_sockets
 
 <br/><hr/><br/>
 
-### Example: Simple Counter Extension 
+### Example: Simple Counter Extension
 #### Use DjangoRestFramework for Token Authentication instead of Session based Authentication
 
 1. Complete all steps in the previous example.
@@ -374,7 +374,7 @@ pip install django_sockets
 5. In your view (specified in `myapp.urls.py`):
     - Ensure you have a DRF Token and pass it to your websocket template.
     - Force users to login before accessing the websocket client.
-        - In general, you would want to create a custom login page and use the `@login_required` decorator on your view. 
+        - In general, you would want to create a custom login page and use the `@login_required` decorator on your view.
         - For simplicity, we are just using the admin login page.
     `myapp/urls.py`
     ```py
@@ -426,13 +426,13 @@ pip install django_sockets
 
 7. Update your client to pass the token to the websocket server on connection:
     - Option 1: Use a `sec-websocket-protocol` header to pass the token:
-        
+
         `templates/client.html`
         ```html
         const websocket = new WebSocket(wsUrl,["Token.{{ token }}"]);
         ```
     - Option 2: Use a query parameter to pass the token:
-        
+
         `templates/client.html`
         ```html
         const wsUrl = "ws://localhost:8000/ws/?token={{ token }}";
@@ -446,4 +446,5 @@ pip install django_sockets
 <br/><hr/><br/>
 
 ## Attributions
-Some of the code in this repository is formed similarly to or inspired by channels_redis as well as django_channels itself. Similarly this work was motivated by some missing features from those packages. Many thanks to them for their original work and inspiration."""
+Some of the code in this repository is formed similarly to or inspired by channels_redis as well as django_channels itself. Similarly this work was motivated by some missing features from those packages. Many thanks to them for their original work and inspiration.
+"""

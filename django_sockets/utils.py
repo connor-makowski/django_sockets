@@ -1,6 +1,5 @@
 import asyncio, logging, threading
 
-
 logger = logging.getLogger(__name__)
 
 # Django Channels Utils (To be importable from django_sockets)
@@ -34,7 +33,12 @@ def ensure_loop_running(loop=None):
     """
     Starts the event loop in a new thread and returns the thread
     """
-    loop = loop if loop is not None else asyncio.get_event_loop()
+    if loop is None:
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
     if not loop.is_running():
         try:
             thread = run_in_thread(start_event_loop_thread, loop)
