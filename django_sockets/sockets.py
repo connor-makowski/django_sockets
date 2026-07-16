@@ -102,7 +102,7 @@ class BaseSocketServer(Broadcaster):
         else:
             try:
                 encoded_data = self.ws_encoder(data)
-            except:
+            except Exception as e:
                 logger.log(
                     logging.ERROR,
                     f"Data encoding failed with: {self.ws_encoder}",

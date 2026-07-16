@@ -33,9 +33,11 @@ def ensure_loop_running(loop=None):
     """
     Starts the event loop in a new thread and returns the thread
     """
-    if loop is None:
+    if loop is None or loop.is_closed():
         try:
             loop = asyncio.get_event_loop()
+            if loop.is_closed():
+                raise RuntimeError("Default loop is closed")
         except RuntimeError:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)

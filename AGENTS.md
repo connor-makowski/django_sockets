@@ -26,6 +26,10 @@ test/
   03_custom_socket_connection.py
   04_custom_socket_receive.py
   05_socket_lifecycle.py
+  06_django_integration.py
+  07_edge_cases.py
+  08_failure_modes.py
+  conftest.py
 utils/
   docs.py            # Generate pdoc HTML docs — DO NOT RUN (release only)
   prettify.py        # Format/lint code with autoflake + black

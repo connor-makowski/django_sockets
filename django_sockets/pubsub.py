@@ -188,10 +188,10 @@ class ShardConnection:
                 pass
             self.receiver_task = None
         if self.pubsub:
-            await self.pubsub.close()
+            await self.pubsub.aclose()
             self.pubsub = None
         if self.connection:
-            await self.connection.close()
+            await self.connection.aclose()
             self.connection = None
 
     # Tasks

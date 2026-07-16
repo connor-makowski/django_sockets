@@ -38,6 +38,7 @@ dev = [
     "autoflake>=2.2.1",
     "black>=24.8.0",
     "build>=1.0.3",
+    "djangorestframework>=3.14.0",
     "nox>=2024.0.0",
     "pdoc>=15.0.0",
     "pytest>=8.0.0",
