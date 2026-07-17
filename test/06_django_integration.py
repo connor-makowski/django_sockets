@@ -148,7 +148,19 @@ def _run_django_integration_test(server_type):
 
     t = threading.Thread(target=run_server, daemon=True)
     t.start()
-    time.sleep(0.5)  # Wait for server to start
+
+    # Wait dynamically for the server to start listening
+    start_wait = time.time()
+    while True:
+        try:
+            with socket.create_connection(("127.0.0.1", port), timeout=0.1):
+                break
+        except (OSError, ConnectionRefusedError):
+            if time.time() - start_wait > 5.0:
+                raise RuntimeError(
+                    f"Server {server_type} failed to start on port {port} within 5.0s"
+                )
+            time.sleep(0.05)
 
     async def run_test():
         # Connect using header subprotocol

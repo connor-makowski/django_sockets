@@ -9,6 +9,8 @@ def test_socket_lifecycle():
         "RECEIVE_FN_CALLED": False,
         "SEND_RECEIVED_BROADCAST": False,
         "SOMETHING_FAILED": False,
+        "DISCONNECT_FN_CALLED": False,
+        "DISCONNECT_CODE": None,
     }
 
     class CustomSocketServer(BaseSocketServer):
@@ -22,6 +24,10 @@ def test_socket_lifecycle():
         def connect(self):
             state["CONNECT_FN_CALLED"] = True
             self.subscribe(self.scope["username"])
+
+        def disconnect(self, code):
+            state["DISCONNECT_FN_CALLED"] = True
+            state["DISCONNECT_CODE"] = code
 
     async def send(data):
         if data == {"type": "websocket.accept"}:
@@ -50,7 +56,7 @@ def test_socket_lifecycle():
         {"type": "websocket.receive", "text": '{"data": "test"}'}
     )
     time.sleep(0.2)
-    custom_receive.put_nowait({"type": "websocket.disconnect"})
+    custom_receive.put_nowait({"type": "websocket.disconnect", "code": 1000})
     time.sleep(0.2)
     custom_receive.put_nowait(
         {"type": "websocket.receive", "text": '{"data_after_close": "test"}'}
@@ -61,6 +67,8 @@ def test_socket_lifecycle():
     assert state["CONNECT_FN_CALLED"] is True
     assert state["RECEIVE_FN_CALLED"] is True
     assert state["SEND_RECEIVED_BROADCAST"] is True
+    assert state["DISCONNECT_FN_CALLED"] is True
+    assert state["DISCONNECT_CODE"] == 1000
     assert state["SOMETHING_FAILED"] is False
     print("05_socket_lifecycle.py: PASS")
 
