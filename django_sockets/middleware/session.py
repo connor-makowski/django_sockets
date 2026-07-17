@@ -1,6 +1,5 @@
 from http.cookies import SimpleCookie
 from importlib import import_module
-from django.conf import settings
 from asgiref.sync import sync_to_async
 import logging
 
@@ -13,19 +12,22 @@ class SessionAuthMiddleware:
         try:
             from django.contrib.auth.models import AnonymousUser
             from django.contrib.auth import get_user_model
+            from django.conf import settings
 
             self.AnonymousUser = AnonymousUser
             self.get_user_model = get_user_model
+            self.settings = settings
         except Exception:
             self.AnonymousUser = None
             self.get_user_model = None
+            self.settings = None
 
     @sync_to_async
     def get_user_from_session_key(self, session_key):
-        if self.get_user_model is None:
+        if self.get_user_model is None or self.settings is None:
             return None
         try:
-            engine = import_module(settings.SESSION_ENGINE)
+            engine = import_module(self.settings.SESSION_ENGINE)
             session = engine.SessionStore(session_key=session_key)
             user_id = session.get("_auth_user_id")
             if user_id:
@@ -46,7 +48,7 @@ class SessionAuthMiddleware:
 
         # Determine the session cookie name from settings
         try:
-            cookie_name = settings.SESSION_COOKIE_NAME
+            cookie_name = self.settings.SESSION_COOKIE_NAME
         except:
             cookie_name = "sessionid"
 

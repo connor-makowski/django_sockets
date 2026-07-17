@@ -7,8 +7,8 @@ from pathlib import Path
 root = Path(__file__).parent.parent
 django_sockets_init = root / "django_sockets" / "__init__.py"
 
-VERSION = "2.0.1"
-OLD_DOC_VERSIONS = ["1.2.0", "1.1.0", "1.0.0"]
+VERSION = "3.0.0b1"
+OLD_DOC_VERSIONS = ["2.0.1", "1.2.0", "1.1.0", "1.0.0"]
 
 env = {
     **os.environ,
