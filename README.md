@@ -418,18 +418,11 @@ pip install django_sockets
     ```
 
 7. Update your client to pass the token to the websocket server on connection:
-    - Option 1: Use a `sec-websocket-protocol` header to pass the token:
+    - Use a `sec-websocket-protocol` header to pass the token:
         
         `templates/client.html`
         ```html
         const websocket = new WebSocket(wsUrl,["Token.{{ token }}"]);
-        ```
-    - Option 2: Use a query parameter to pass the token:
-        
-        `templates/client.html`
-        ```html
-        const wsUrl = "ws://localhost:8000/ws/?token={{ token }}";
-        const websocket = new WebSocket(wsUrl);
         ```
 8. Run the server and navigate to `http://localhost:8000/` to see the client page.
     - You will be redirected to the admin login page.

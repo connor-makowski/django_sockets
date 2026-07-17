@@ -7,6 +7,7 @@ import threading
 import uvicorn
 import websockets
 import json
+import pytest
 from django.conf import settings
 from django.urls import path
 from django.contrib.auth import get_user_model
@@ -23,7 +24,10 @@ if not settings.configured:
         DATABASES={
             "default": {
                 "ENGINE": "django.db.backends.sqlite3",
-                "NAME": ":memory:",
+                "NAME": "file:testdb?mode=memory&cache=shared",
+                "OPTIONS": {
+                    "uri": True,
+                },
             }
         },
         SECRET_KEY="test-secret-key",
@@ -42,6 +46,9 @@ from django_sockets.middleware import DRFTokenAuthMiddleware
 
 class IntegrationSocketServer(BaseSocketServer):
     def connect(self):
+        if not self.scope["user"].is_authenticated:
+            self.send({"error": "unauthenticated"})
+            return
         self.channel_id = str(self.scope["user"].username)
         self.subscribe(self.channel_id)
 
@@ -86,6 +93,19 @@ def _run_django_integration_test(server_type):
 
     token, _ = Token.objects.get_or_create(user=user)
     token_key = token.key
+
+    # Create an inactive user to test authentication failure for inactive accounts
+    inactive_username = f"inactive_{server_type}"
+    inactive_user, created_inactive = User.objects.get_or_create(
+        username=inactive_username
+    )
+    if created_inactive:
+        inactive_user.set_password("password123")
+        inactive_user.is_active = False
+        inactive_user.save()
+
+    inactive_token, _ = Token.objects.get_or_create(user=inactive_user)
+    inactive_token_key = inactive_token.key
 
     port = get_free_port()
 
@@ -142,12 +162,12 @@ def _run_django_integration_test(server_type):
             response = await asyncio.wait_for(ws.recv(), timeout=2.0)
             assert json.loads(response) == {"message": "test headers"}
 
-        # Connect using query parameter
-        uri_qp = f"ws://127.0.0.1:{port}/ws/?token={token_key}"
-        async with websockets.connect(uri_qp) as ws:
-            await ws.send(json.dumps({"message": "test query params"}))
+        # Connect using inactive user's token (should fail to authenticate and receive error)
+        async with websockets.connect(
+            uri, subprotocols=[f"Token.{inactive_token_key}"]
+        ) as ws:
             response = await asyncio.wait_for(ws.recv(), timeout=2.0)
-            assert json.loads(response) == {"message": "test query params"}
+            assert json.loads(response) == {"error": "unauthenticated"}
 
     asyncio.run(run_test())
 

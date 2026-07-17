@@ -24,6 +24,9 @@ class DRFTokenAuthMiddleware(BaseTokenAuthMiddleware):
             )
             return None
         try:
-            return self.TokenModel.objects.get(key=token).user
+            user = self.TokenModel.objects.get(key=token).user
+            if user is not None and not user.is_active:
+                return None
+            return user
         except Exception:
             return None

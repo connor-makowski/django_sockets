@@ -1,4 +1,3 @@
-from django.http import QueryDict
 import logging
 
 logger = logging.getLogger(__name__)
@@ -40,13 +39,6 @@ class BaseTokenAuthMiddleware:
             if len(token_protocols) > 0:
                 scope["__chosen_subprotocol__"] = token_protocols[0]
                 token = token_protocols[0].replace("Token.", "")
-        # Handle the case where the token is passed in the query string
-        if token is None:
-            query_params = QueryDict(scope["query_string"].decode())
-            for key in ["token", "Token", "user_token"]:
-                if key in query_params:
-                    token = query_params.get(key)
-                    break
         # Update the scope with the user object
         if token is not None:
             try:
