@@ -2,9 +2,48 @@ import asyncio, logging, threading
 
 logger = logging.getLogger(__name__)
 
-# Django Channels Utils (To be importable from django_sockets)
-# Do not remove these imports
-from channels.routing import ProtocolTypeRouter, URLRouter
+
+class ProtocolTypeRouter:
+    def __init__(self, application_mapping):
+        self.application_mapping = application_mapping
+
+    async def __call__(self, scope, receive, send):
+        scope_type = scope["type"]
+        if scope_type in self.application_mapping:
+            application = self.application_mapping[scope_type]
+            return await application(scope, receive, send)
+        if scope_type == "lifespan":
+            while True:
+                message = await receive()
+                if message["type"] == "lifespan.startup":
+                    await send({"type": "lifespan.startup.complete"})
+                elif message["type"] == "lifespan.shutdown":
+                    await send({"type": "lifespan.shutdown.complete"})
+                    return
+        raise ValueError(
+            f"No application configured for protocol: {scope_type}"
+        )
+
+
+class URLRouter:
+    def __init__(self, routes):
+        self.routes = routes
+
+    async def __call__(self, scope, receive, send):
+        path = scope.get("path", "")
+        if path.startswith("/"):
+            path = path[1:]
+        for route in self.routes:
+            match = route.pattern.match(path)
+            if match is not None:
+                remaining_path, args, kwargs = match
+                new_scope = dict(scope)
+                new_scope["url_route"] = {
+                    "args": args,
+                    "kwargs": kwargs,
+                }
+                return await route.callback(new_scope, receive, send)
+        raise ValueError(f"No route found for path: /{path}")
 
 
 def run_in_thread(command, *args, **kwargs):
@@ -12,7 +51,7 @@ def run_in_thread(command, *args, **kwargs):
     Takes in a synchronous command along with args and kwargs and runs it in a background
     thread that is not tied to the websocket connection.
 
-    This will be terminated when the larger daphne server is terminated
+    This will be terminated when the larger server is terminated
     """
     thread = threading.Thread(
         target=command, args=args, kwargs=kwargs, daemon=True

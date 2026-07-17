@@ -12,7 +12,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django_sockets"
-version = "2.0.1"
+version = "3.0.0"
 description = "Simplified Django websocket processes designed to work with cloud caches"
 authors = [
     {name="Connor Makowski", email="conmak@mit.edu"}
@@ -29,8 +29,6 @@ dependencies = [
     "asgiref>=3.0.0,<4.0.0",
     "redis>=5.0.0,<9.0.0",
     "msgpack>=1.0.0,<2.0.0",
-    "daphne>=4.0.0,<5.0.0",
-    "channels>=4.0.0,<5.0.0"
 ]
 
 [project.optional-dependencies]
@@ -44,6 +42,10 @@ dev = [
     "pytest>=8.0.0",
     "twine>=4.0.2",
     "virtualenv>=20.24.6",
+    "websockets>=10.0",
+    "daphne>=4.0.0,<5.0.0",
+    "hypercorn>=0.14.0",
+    "uvicorn>=0.20.0",
 ]
 
 [project.urls]

@@ -3,27 +3,25 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Safe import of AnonymousUser
-# This allows us to avoid requiring Django to be setup / configured for non Django projects.
-try:
-    from django.contrib.auth.models import AnonymousUser
 
-    def get_anonymous_user_obj():
-        return AnonymousUser()
+class BaseTokenAuthMiddleware:
+    def __init__(self, app):
+        self.app = app
+        try:
+            from django.contrib.auth.models import AnonymousUser
 
-except:
+            self.AnonymousUser = AnonymousUser
+        except Exception:
+            self.AnonymousUser = None
 
-    def get_anonymous_user_obj():
+    def get_anonymous_user_obj(self):
+        if self.AnonymousUser is not None:
+            return self.AnonymousUser()
         logger.log(
             logging.ERROR,
             "Unable to get AnonymousUser object. Check to make sure Django is properly installed and configured before using this middleware.",
         )
         return None
-
-
-class BaseTokenAuthMiddleware:
-    def __init__(self, app):
-        self.app = app
 
     async def get_user(self, token):
         raise NotImplementedError(
@@ -56,6 +54,6 @@ class BaseTokenAuthMiddleware:
             except:
                 pass
         if user_obj is None:
-            user_obj = get_anonymous_user_obj()
+            user_obj = self.get_anonymous_user_obj()
         scope["user"] = user_obj
         return await self.app(scope, receive, send)

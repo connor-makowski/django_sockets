@@ -26,10 +26,19 @@ def generate_docs(version):
         tarball = str(root / "dist" / f"django_sockets-{version}.tar.gz")
         subprocess.run(
             [
-                "uv", "run", "--isolated",
-                "--with", tarball,
-                "--with", "pdoc",
-                "pdoc", "-o", out_dir, "-t", template_dir, "django_sockets",
+                "uv",
+                "run",
+                "--isolated",
+                "--with",
+                tarball,
+                "--with",
+                "pdoc",
+                "pdoc",
+                "-o",
+                out_dir,
+                "-t",
+                template_dir,
+                "django_sockets",
             ],
             check=True,
             env=env,
@@ -37,7 +46,16 @@ def generate_docs(version):
         )
     else:
         subprocess.run(
-            [sys.executable, "-m", "pdoc", "-o", out_dir, "-t", template_dir, "django_sockets"],
+            [
+                sys.executable,
+                "-m",
+                "pdoc",
+                "-o",
+                out_dir,
+                "-t",
+                template_dir,
+                "django_sockets",
+            ],
             check=True,
             env=env,
         )

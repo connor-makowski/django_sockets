@@ -20,7 +20,6 @@
     <script>
         // Connect to the WebSocket server
         const wsUrl = "ws://localhost:8000/ws/?token={{ token }}";
-        // Pass the token in the header as a subprotocol with the WebSocket connection request
         const websocket = new WebSocket(wsUrl);
         var counter = 0;
 

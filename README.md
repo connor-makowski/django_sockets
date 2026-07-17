@@ -4,6 +4,8 @@
 
 Simplified Django websocket processes designed to work with cloud caches (valkey|redis on single|distributed|serverless)
 
+> `django_sockets` is compatible with **many standard ASGI servers** (such as Uvicorn, Daphne, or Hypercorn). For simplicity, this guide focuses on Uvicorn, but you can find setup details for other servers in the [Extension: Alternative ASGI Servers](#extension-alternative-asgi-servers-daphne-hypercorn-etc) section at the bottom.
+
 ## Setup
 
 ### General
@@ -53,7 +55,7 @@ pip install django_sockets
     ```bash
     pip install django_sockets
     ```
-    - Note: This would normally be done via your `requirements.txt` file and installed in a virtual environment.
+    - Note: This would normally be done via your `pyproject.toml` or `requirements.txt` file and installed in a virtual environment.
 3. Create a new Django project (if you don't already have one) and navigate to the project directory:
 
     `shell`
@@ -61,20 +63,7 @@ pip install django_sockets
     python3 -m django startproject myapp
     cd myapp
     ```
-4. Modify your settings file:
-    - Add `ASGI_APPLICATION` above your `INSTALLED_APPS`
-    - Add `'daphne'` to the top of your `INSTALLED_APPS` in your `settings.py` file
-        - Daphne is the django created ASGI server that is used by `django_sockets`.
-    
-    `myapp/settings.py`
-    ```py
-    ASGI_APPLICATION = 'myapp.asgi.application'
-    INSTALLED_APPS = [
-        'daphne',
-        # Your other installed apps
-        ]
-    ```
-5. Create a new file called `ws.py` and place it in `myapp`.
+4. Create a new file called `ws.py` and place it in `myapp`.
     - This file will hold the websocket server logic.
     - Define a `SocketServer` class that extends `BaseSocketServer`.
         - Define a `configure` method to set the cache hosts.
@@ -160,8 +149,10 @@ pip install django_sockets
             path("ws/", SocketServer.as_asgi),
         ]))
     ```
-6. Modify your `asgi.py` file:
-    - Use the `django_sockets` `ProtocolTypeRouter`
+5. Modify your `asgi.py` file:
+    - Set the `DJANGO_SETTINGS_MODULE` environment variable.
+    - Initialize the Django ASGI application using `get_asgi_application()` first.
+    - **CRITICAL**: Import `ProtocolTypeRouter` and your `get_ws_asgi_application` *after* initializing Django. This ensures all settings are loaded and apps are registered before websocket routing/middleware (like auth middleware) is imported.
     - Based on the protocol type, return the appropriate ASGI application.
 
     `myapp/asgi.py`
@@ -169,12 +160,14 @@ pip install django_sockets
     import os
 
     from django.core.asgi import get_asgi_application
+
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myapp.settings')
+    asgi_app = get_asgi_application()
+
+    # Import websocket routing/middleware after Django setup
     from django_sockets.utils import ProtocolTypeRouter
     from .ws import get_ws_asgi_application
 
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myapp.settings')
-
-    asgi_app = get_asgi_application()
     ws_asgi_app = get_ws_asgi_application()
 
     application = ProtocolTypeRouter(
@@ -184,7 +177,7 @@ pip install django_sockets
         }
     )
     ```
-7. In the project root, create `templates/client.html`:
+6. In the project root, create `templates/client.html`:
     - This will be the client side of the websocket connection.
     - It will contain a simple counter that can be incremented and reset.
     - The client will send commands to the server to reset or increment the counter.
@@ -263,7 +256,7 @@ pip install django_sockets
     </html>
     ```
 
-8. In `settings.py`:
+7. In `settings.py`:
     - Update `DIRS` in your `TEMPLATES` to include your new template directory
 
     `myapp/settings.py`
@@ -285,7 +278,7 @@ pip install django_sockets
     ]
     ```
 
-9. In `urls.py`:
+8. In `urls.py`:
     - Add a simple `clent_view` to render the `client.html` template
     - Set at it the root URL
 
@@ -309,18 +302,20 @@ pip install django_sockets
     ```
     - Note: Normally something like `client_view` would be imported from a `views.py` file, but for simplicity it is defined here.
 
-10. Setup and run the server:
+9. Setup and run the server:
     - Make any needed migrations (determine if the database needs to be created or updated)
     - Migrate any changes to bring the database up to date
-    - Run the server
+    - Run the server using `uvicorn` 
+        - You may need to install uvicorn if you haven't already:
+        - `pip install uvicorn`
 
     `shell`
     ```sh
     python manage.py makemigrations
     python manage.py migrate
-    python manage.py runserver
+    uvicorn myapp.asgi:application --reload
     ```
-11. Open your browser:
+10. Open your browser:
     - Navigate to `http://localhost:8000/` to see the client page. 
     - Duplicate the tab. 
         - You should see the counter incrementing and resetting in both tabs.
@@ -330,7 +325,7 @@ pip install django_sockets
     - Note: Since you have not logged in yet, your Auth Middleware will just return an Anonymous User.
         - This means that all users are subscribed to the same channel from the user id ('None').
         - Once users are logged in, they will be subscribed to their own user id channel.
-12. To avoid creating a custom login page, we will just use a superuser and take advantage of the admin login page.
+11. To avoid creating a custom login page, we will just use a superuser and take advantage of the admin login page.
     - To create a superuser, you can run the following command:
         ```bash
         python manage.py createsuperuser
@@ -358,7 +353,6 @@ pip install django_sockets
     `myapp/settings.py`
     ```py
     INSTALLED_APPS = [
-        'daphne',
         # Your other installed apps,
         'rest_framework.authtoken', # Add this installed app
         ]
@@ -441,6 +435,71 @@ pip install django_sockets
     - You will be redirected to the admin login page.
     - Login with your superuser credentials.
     - You should now see a functional counter page with websockets scoped to the logged in user.
+
+## Development
+
+### Running Tests
+To run the full test suite, you can use:
+```bash
+uv run pytest
+```
+When running `pytest`, a Valkey/Redis docker container is automatically started and stopped for the session.
+
+If you want to run an individual test script (such as `uv run test/06_django_integration.py`) directly, you will need to start the Valkey/Redis container manually before running the script:
+```bash
+# Start the Valkey/Redis container
+uv run python utils/redis_start.py
+
+# Run the test script
+uv run test/06_django_integration.py
+
+# Stop and remove the container when done
+uv run python utils/redis_stop.py
+```
+
+## Extension: Alternative ASGI Servers (Daphne, Hypercorn, etc.)
+
+Since `django_sockets` implements standard ASGI routers (`ProtocolTypeRouter` and `URLRouter`) and follows the standard ASGI specification, it is fully compatible with any ASGI-compliant web server (not just Uvicorn).
+
+### Running with Daphne
+Daphne is an ASGI server developed for Django Channels. To run your application with Daphne:
+
+1. Install Daphne:
+   ```bash
+   pip install daphne
+   ```
+2. Run your application using the `daphne` command-line utility:
+   ```bash
+   daphne -p 8000 myapp.asgi:application
+   ```
+3. (Optional) If you want to use Daphne to power your local development server when running `python manage.py runserver`, configure your `settings.py`:
+   ```python
+   # myapp/settings.py
+   ASGI_APPLICATION = 'myapp.asgi.application'
+   INSTALLED_APPS = [
+       'daphne',  # Must be at the top of INSTALLED_APPS
+       # ... other apps
+   ]
+   ```
+
+### Running with Hypercorn
+Hypercorn is another ASGI server that supports HTTP/2, HTTP/3, and WebSockets. To run your application with Hypercorn:
+
+1. Install Hypercorn:
+   ```bash
+   pip install hypercorn
+   ```
+2. Run your application using the `hypercorn` command-line utility:
+   ```bash
+   hypercorn myapp.asgi:application --bind 127.0.0.1:8000
+   ```
+
+### Testing with Different ASGI Servers
+You can control which ASGI server is used in the integration tests using the `DJANGO_SOCKETS_TEST_SERVER` environment variable:
+```bash
+# Run tests using Daphne (requires daphne installed)
+DJANGO_SOCKETS_TEST_SERVER=daphne uv run pytest
+```
 
 <br/><hr/><br/>
 

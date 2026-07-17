@@ -2,7 +2,7 @@
 
 ## Project Purpose
 
-`django_sockets` is a library providing simplified Django websocket processes designed to work with cloud caches (valkey/redis on single, distributed, or serverless setups). It simplifies async WebSocket connections, routing, middleware, and pub/sub broadcasting using Daphne and Django.
+`django_sockets` is a library providing simplified Django websocket processes designed to work with cloud caches (valkey/redis on single, distributed, or serverless setups). It simplifies async WebSocket connections, routing, middleware, and pub/sub broadcasting using Uvicorn and Django.
 
 ---
 
@@ -33,6 +33,8 @@ test/
 utils/
   docs.py            # Generate pdoc HTML docs — DO NOT RUN (release only)
   prettify.py        # Format/lint code with autoflake + black
+  redis_start.py     # Start the local Valkey/Redis Docker container
+  redis_stop.py      # Stop the local Valkey/Redis Docker container
   test.py            # Run tests (runs inside Docker container)
 Dockerfile           # Testing/linting container definition
 noxfile.py           # Nox configuration for running pytest across multiple Python versions
@@ -90,6 +92,9 @@ class SocketServer(BaseSocketServer):
         self.broadcast(self.channel_id, data)
 ```
 
+#### Django Initialization Order in `asgi.py`
+In Django ASGI setups, `os.environ.setdefault('DJANGO_SETTINGS_MODULE', ...)` and `get_asgi_application()` must be called **before** importing any files containing `django_sockets` routing or authentication middleware. Importing these routes/middleware prematurely can cause components like `SessionAuthMiddleware` or `DRFTokenAuthMiddleware` to fail to import Django/DRF models correctly (such as `AnonymousUser` or DRF's `Token` model) due to uninitialized settings or app registries, resulting in silent failures at runtime.
+
 ---
 
 ## Coding Conventions
@@ -99,6 +104,7 @@ class SocketServer(BaseSocketServer):
 - **Environment Management**: Use `uv`. Run `uv sync --extra dev` after modifying dependencies.
 - **Documentation**: The primary documentation is `README.md`. `django_sockets/__init__.py` has its docstring generated dynamically from `README.md` during the release process (by `utils/docs.py`). **Do not edit the docstring in `__init__.py` directly.**
 - **Code style**: Use `uv run utils/prettify.py` to clean and format Python code.
+- **Local Script Testing**: When running individual test scripts (e.g. `uv run test/06_django_integration.py`) outside of `pytest`, you must manually start the Valkey/Redis server. Use `uv run python utils/redis_start.py` to start the server and `uv run python utils/redis_stop.py` to stop it.
 
 ---
 
