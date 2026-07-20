@@ -102,7 +102,7 @@ class BaseSocketServer(Broadcaster):
         else:
             try:
                 encoded_data = self.ws_encoder(data)
-            except:
+            except Exception as e:
                 logger.log(
                     logging.ERROR,
                     f"Data encoding failed with: {self.ws_encoder}",
@@ -158,6 +158,7 @@ class BaseSocketServer(Broadcaster):
                         logger.exception("Invalid JSON data received")
                 elif data["type"] == "websocket.disconnect":
                     self.__kill__()
+                    self.disconnect(data.get("code", 1000))
                 elif data["type"] == "websocket.connect":
                     data = {"type": "websocket.accept"}
                     if self.scope.get("__chosen_subprotocol__"):
@@ -244,4 +245,9 @@ class BaseSocketServer(Broadcaster):
     def connect(self):
         """
         Placeholder method for the connect method that can be overwritten by the user.
+        """
+
+    def disconnect(self, code):
+        """
+        Placeholder method for the disconnect method that can be overwritten by the user.
         """

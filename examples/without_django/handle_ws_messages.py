@@ -1,6 +1,7 @@
 from django_sockets.sockets import BaseSocketServer
 import asyncio, time
 
+
 class CustomSocketServer(BaseSocketServer):
     def connect(self):
         """
@@ -12,7 +13,7 @@ class CustomSocketServer(BaseSocketServer):
         """
         print(f"CONNECTED")
         print(f"SUSCRIBING TO '{self.scope['username']}'")
-        self.subscribe(self.scope['username'])
+        self.subscribe(self.scope["username"])
 
     def receive(self, data):
         """
@@ -25,7 +26,8 @@ class CustomSocketServer(BaseSocketServer):
         """
         print("WS RECEIVED: ", data)
         print(f"BROADCASTING TO '{self.scope['username']}'")
-        self.broadcast(self.scope['username'], data)
+        self.broadcast(self.scope["username"], data)
+
 
 # Override the send method to print the data being sent
 async def send(data):
@@ -39,44 +41,49 @@ async def send(data):
     """
     print("WS SENDING:", str(data)[:128])
 
+
 # Create a receive queue to simulate receiving messages from a websocket client
 custom_receive = asyncio.Queue()
 # Create a custom socket server defined above with a scope of {'username':'adam'}, the custom_receive queue, and the send method defined above
 custom_socket_server = CustomSocketServer(
-    scope={'username':'adam'}, 
-    receive=custom_receive.get, 
-    send=send, 
-    hosts=[{"address": f"redis://0.0.0.0:6379"}]
+    scope={"username": "adam"},
+    receive=custom_receive.get,
+    send=send,
+    hosts=[{"address": f"redis://0.0.0.0:6379"}],
 )
 # Start the listeners for the custom socket server
 #    - Websocket Listener - Listens for websocket messages
 #    - Broadcast Listener - Listens for messages that were broadcasted to a channel that the socket server is subscribed to
 custom_socket_server.start_listeners()
 # Give the async functions a small amount of time to complete
-time.sleep(.1)
+time.sleep(0.1)
 # Simulate a WS connection request
-custom_receive.put_nowait({'type': 'websocket.connect'})
+custom_receive.put_nowait({"type": "websocket.connect"})
 # Give the async functions a small amount of time to complete
-time.sleep(.1)
+time.sleep(0.1)
 # Simulate a message being received from a WS client
 # This will call the receive method which is defined above
-custom_receive.put_nowait({'type': 'websocket.receive', 'text': '{"data": "test"}'})
+custom_receive.put_nowait(
+    {"type": "websocket.receive", "text": '{"data": "test"}'}
+)
 # Give the async functions a small amount of time to complete
-time.sleep(.1)
+time.sleep(0.1)
 # Simulate a WS disconnect request
-custom_receive.put_nowait({'type': 'websocket.disconnect'})
+custom_receive.put_nowait({"type": "websocket.disconnect"})
 # Give the async functions a small amount of time to complete
-time.sleep(.1)
+time.sleep(0.1)
 # Simulate a message being received from a WS client after the connection has been closed
 # This will not do anything since the connection has been closed and the listeners have been killed
-custom_receive.put_nowait({'type': 'websocket.receive', 'text': '{"data_after_close": "test"}'})
+custom_receive.put_nowait(
+    {"type": "websocket.receive", "text": '{"data_after_close": "test"}'}
+)
 # Give the async functions a small amount of time to complete
-time.sleep(.1)
+time.sleep(0.1)
 
-#=> Output:
-#=> WS SENDING: {'type': 'websocket.accept'}
-#=> CONNECTED
-#=> SUSCRIBING TO 'adam'
-#=> WS RECEIVED:  {'data': 'test'}
-#=> BROADCASTING TO 'adam'
-#=> WS SENDING: {'type': 'websocket.send', 'text': '{"data": "test"}'}
+# => Output:
+# => WS SENDING: {'type': 'websocket.accept'}
+# => CONNECTED
+# => SUSCRIBING TO 'adam'
+# => WS RECEIVED:  {'data': 'test'}
+# => BROADCASTING TO 'adam'
+# => WS SENDING: {'type': 'websocket.send', 'text': '{"data": "test"}'}

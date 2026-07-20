@@ -1,29 +1,26 @@
-from django.http import QueryDict
 import logging
 
 logger = logging.getLogger(__name__)
-
-# Safe import of AnonymousUser
-# This allows us to avoid requiring Django to be setup / configured for non Django projects.
-try:
-    from django.contrib.auth.models import AnonymousUser
-
-    def get_anonymous_user_obj():
-        return AnonymousUser()
-
-except:
-
-    def get_anonymous_user_obj():
-        logger.log(
-            logging.ERROR,
-            "Unable to get AnonymousUser object. Check to make sure Django is properly installed and configured before using this middleware.",
-        )
-        return None
 
 
 class BaseTokenAuthMiddleware:
     def __init__(self, app):
         self.app = app
+        try:
+            from django.contrib.auth.models import AnonymousUser
+
+            self.AnonymousUser = AnonymousUser
+        except Exception:
+            self.AnonymousUser = None
+
+    def get_anonymous_user_obj(self):
+        if self.AnonymousUser is not None:
+            return self.AnonymousUser()
+        logger.log(
+            logging.ERROR,
+            "Unable to get AnonymousUser object. Check to make sure Django is properly installed and configured before using this middleware.",
+        )
+        return None
 
     async def get_user(self, token):
         raise NotImplementedError(
@@ -42,13 +39,6 @@ class BaseTokenAuthMiddleware:
             if len(token_protocols) > 0:
                 scope["__chosen_subprotocol__"] = token_protocols[0]
                 token = token_protocols[0].replace("Token.", "")
-        # Handle the case where the token is passed in the query string
-        if token is None:
-            query_params = QueryDict(scope["query_string"].decode())
-            for key in ["token", "Token", "user_token"]:
-                if key in query_params:
-                    token = query_params.get(key)
-                    break
         # Update the scope with the user object
         if token is not None:
             try:
@@ -56,6 +46,6 @@ class BaseTokenAuthMiddleware:
             except:
                 pass
         if user_obj is None:
-            user_obj = get_anonymous_user_obj()
+            user_obj = self.get_anonymous_user_obj()
         scope["user"] = user_obj
         return await self.app(scope, receive, send)

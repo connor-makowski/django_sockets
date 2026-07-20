@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.shortcuts import render
 from django.urls import path
@@ -21,17 +22,21 @@ from django.urls import path
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.decorators import login_required
 
+
 @login_required(login_url="/admin/login/")
 def client_view(request):
-    '''
+    """
     Render the client.html template
-    '''
+    """
     # Get or create a token for the user
     token, created = Token.objects.get_or_create(user=request.user)
     # Pass the user and token to the client.html template
-    return render(request, 'client.html', {'user': request.user, 'token': token})
+    return render(
+        request, "client.html", {"user": request.user, "token": token}
+    )
+
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', client_view),
+    path("admin/", admin.site.urls),
+    path("", client_view),
 ]
