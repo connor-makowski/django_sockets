@@ -16,7 +16,7 @@ def __default_ws_encoder__(obj):
 
     - str = The JSON string representation of the data
     """
-    return orjson.dumps(obj).decode("utf-8")
+    return orjson.dumps(obj, option=orjson.OPT_NON_STR_KEYS).decode("utf-8")
 
 
 class BaseSocketServer(Broadcaster):
