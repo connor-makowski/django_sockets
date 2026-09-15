@@ -18,18 +18,31 @@ class Broadcaster:
         self.pubsub_layer = PubSubLayer(hosts=hosts)
 
     # Sync Functions
-    def broadcast(self, channel: str, data: [dict | list]):
+    def broadcast(self, channel: str | list[str] | tuple, data: [dict | list]):
         """
-        Broadcast data to a specific channel or all channels that this socket server is subscribed to.
+        Broadcast data to a specific channel, list of channels, or all channels that this socket server is subscribed to.
 
         Requires:
 
-        - channel: str = The channel to broadcast the data to
+        - channel: [str|list|tuple] = The channel or channels to broadcast the data to
         - data: [dict|list] = The data to broadcast to the channel
             - Note: This data must be JSON serializable
         """
         asyncio.run_coroutine_threadsafe(
             self.async_broadcast(channel, data), self.__loop__
+        )
+
+    def broadcast_many(self, channels: list[str], data: [dict | list]):
+        """
+        Broadcast data to multiple channels.
+
+        Requires:
+
+        - channels: list[str] = List of channel names to broadcast the data to
+        - data: [dict|list] = The data to broadcast
+        """
+        asyncio.run_coroutine_threadsafe(
+            self.async_broadcast_many(channels, data), self.__loop__
         )
 
     def subscribe(self, channel: str):
@@ -45,18 +58,32 @@ class Broadcaster:
         )
 
     # Async Functions
-    async def async_broadcast(self, channel: str, data):
+    async def async_broadcast(self, channel: str | list[str] | tuple, data):
         """
-        Broadcast data to a channel where all relevant clients will receive the data
+        Broadcast data to a channel or channels where all relevant clients will receive the data
         and send it to the client
 
         Requires:
 
-        - channel: str = The channel to broadcast the data to
+        - channel: [str|list|tuple] = The channel or channels to broadcast the data to
         - data: [dict|list] = The data to broadcast to the channel
             - Note: This data must be JSON serializable
         """
-        await self.pubsub_layer.send(str(channel), data)
+        if isinstance(channel, (list, tuple, set)):
+            await self.async_broadcast_many(list(channel), data)
+        else:
+            await self.pubsub_layer.send(str(channel), data)
+
+    async def async_broadcast_many(self, channels: list[str], data):
+        """
+        Broadcast data to multiple channels asynchronously.
+
+        Requires:
+
+        - channels: list[str] = List of channels to broadcast the data to
+        - data: [dict|list] = The data to broadcast
+        """
+        await self.pubsub_layer.send_many(list(channels), data)
 
     async def async_subscribe(self, channel: str):
         """

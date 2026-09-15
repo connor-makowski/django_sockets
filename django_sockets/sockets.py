@@ -1,8 +1,22 @@
-import json, asyncio, logging
+import orjson, asyncio, logging, inspect
 from .broadcaster import Broadcaster
-from .utils import run_in_thread
 
 logger = logging.getLogger(__name__)
+
+
+def __default_ws_encoder__(obj):
+    """
+    A default websocket encoder that uses orjson to serialize the data to a JSON string
+
+    Required:
+
+    - obj: [dict|list|str|float|int] = The data to serialize to a JSON string
+
+    Returns:
+
+    - str = The JSON string representation of the data
+    """
+    return orjson.dumps(obj).decode("utf-8")
 
 
 class BaseSocketServer(Broadcaster):
@@ -12,7 +26,7 @@ class BaseSocketServer(Broadcaster):
         receive,
         send,
         hosts=[{"address": "redis://0.0.0.0:6379"}],
-        ws_encoder=json.dumps,
+        ws_encoder=__default_ws_encoder__,
         ws_encoder_is_bytes=False,
     ):
         """
@@ -37,12 +51,23 @@ class BaseSocketServer(Broadcaster):
         self.scope = scope
         self.__receive__ = receive
         self.__send__ = send
+        self.__send_lock__ = asyncio.Lock()
         self.is_alive = True
         self.hosts = hosts
         self.ws_encoder = ws_encoder
         self.ws_encoder_is_bytes = ws_encoder_is_bytes
         self.configure()
         super().__init__(hosts=self.hosts)
+
+        # Cache method inspection checks to avoid per-message inspection overhead
+        self._is_async_receive = inspect.iscoroutinefunction(self.receive)
+        self._is_async_connect = inspect.iscoroutinefunction(self.connect)
+        self._is_async_disconnect = inspect.iscoroutinefunction(self.disconnect)
+        try:
+            sig = inspect.signature(self.disconnect)
+            self._disconnect_has_params = len(sig.parameters) > 0
+        except Exception:
+            self._disconnect_has_params = True
 
     def configure(self):
         """
@@ -62,7 +87,9 @@ class BaseSocketServer(Broadcaster):
         """
 
     # Sync Functions
-    def send(self, data: [dict | list | str | float | int]):
+    def send(
+        self, data: [dict | list | str | float | int | bytes], raw: bool = False
+    ):
         """
         Send data to the websocket client.
         - Note: This only sends data to the client from which the calling function was called
@@ -71,19 +98,36 @@ class BaseSocketServer(Broadcaster):
 
         Requires:
 
-        - data: [dict|list|str|float|int] = The data to send to the client
-            - Note: This data must be JSON serializable
+        - data: [dict|list|str|float|int|bytes] = The data to send to the client
+        - raw: bool = If True, bypasses ws_encoder and sends raw string/bytes directly
         """
-        self.run_async(self.async_send(data))
+        self.run_async(self.async_send(data, raw=raw))
+
+    def close(self, code: int = 1000):
+        """
+        Close the websocket connection from the server side.
+
+        Requires:
+        - code: int = The WebSocket close code (default: 1000)
+        """
+        self.run_async(self.async_close(code=code))
 
     def run_async(self, func):
         """
         Run an async function in the current object's event loop
         """
-        asyncio.run_coroutine_threadsafe(func, self.__loop__)
+        try:
+            loop = asyncio.get_running_loop()
+            if loop is self.__loop__:
+                return loop.create_task(func)
+        except RuntimeError:
+            pass
+        return asyncio.run_coroutine_threadsafe(func, self.__loop__)
 
     # Async Functions
-    async def async_send(self, data: [dict | list | str | float | int]):
+    async def async_send(
+        self, data: [dict | list | str | float | int | bytes], raw: bool = False
+    ):
         """
         Send data to the websocket client.
         - Note: To send data to all clients that are subscribed to a channel, use the broadcast method
@@ -91,30 +135,56 @@ class BaseSocketServer(Broadcaster):
 
         Requires:
 
-        - data: [dict|list|str|float|int] = The data to send to the client
-            - Note: This data must be JSON serializable
+        - data: [dict|list|str|float|int|bytes] = The data to send to the client
+        - raw: bool = If True, bypasses ws_encoder and sends raw string/bytes directly
         """
         if self.__send__ is None:
             logger.log(
                 logging.ERROR,
                 "The send and async_send functions are not available because the send parameter was not provided when the socket server was initialized. To silence this warning, you can provide a function that simulates some sending behavior.",
             )
-        else:
-            try:
-                encoded_data = self.ws_encoder(data)
-            except Exception as e:
-                logger.log(
-                    logging.ERROR,
-                    f"Data encoding failed with: {self.ws_encoder}",
+            return
+
+        try:
+            if raw:
+                encoded_data = data
+                encoded_type = (
+                    "bytes" if isinstance(data, (bytes, bytearray)) else "text"
                 )
-                logger.log(logging.ERROR, f"Error: {e}")
-            try:
-                encoded_type = "bytes" if self.ws_encoder_is_bytes else "text"
+            else:
+                encoded_data = self.ws_encoder(data)
+                encoded_type = (
+                    "bytes"
+                    if (
+                        self.ws_encoder_is_bytes
+                        or isinstance(encoded_data, (bytes, bytearray))
+                    )
+                    else "text"
+                )
+            async with self.__send_lock__:
                 await self.__send__(
                     {"type": "websocket.send", encoded_type: encoded_data}
                 )
-            except Exception as e:
+        except Exception as e:
+            if self.is_alive:
                 logger.log(logging.ERROR, f"Error during socket send: {e}")
+
+    async def async_close(self, code: int = 1000):
+        """
+        Close the websocket connection from the server side asynchronously.
+
+        Requires:
+        - code: int = The WebSocket close code (default: 1000)
+        """
+        self.__kill__()
+        if self.__send__ is not None:
+            try:
+                async with self.__send_lock__:
+                    await self.__send__(
+                        {"type": "websocket.close", "code": code}
+                    )
+            except Exception as e:
+                logger.log(logging.ERROR, f"Error during socket close: {e}")
 
     async def async_handle_received_broadcast(
         self, channel: str, data: [dict | list | str | float | int]
@@ -137,6 +207,15 @@ class BaseSocketServer(Broadcaster):
         """
         await self.async_send(data)
 
+    async def _dispatch_receive(self, data_payload):
+        try:
+            if self._is_async_receive:
+                await self.receive(data_payload)
+            else:
+                await asyncio.to_thread(self.receive, data_payload)
+        except Exception:
+            logger.exception("Exception in receive handler")
+
     # Tasks
     async def __ws_listener_task__(self):
         """
@@ -152,21 +231,56 @@ class BaseSocketServer(Broadcaster):
                 data = await self.__receive__()
                 if data["type"] == "websocket.receive":
                     try:
-                        data_text = json.loads(data["text"])
-                        run_in_thread(self.receive, data_text)
-                    except:
-                        logger.exception("Invalid JSON data received")
+                        raw_text = data.get("text")
+                        if raw_text is not None:
+                            data_payload = (
+                                self.ws_decoder(raw_text)
+                                if hasattr(self, "ws_decoder")
+                                and callable(self.ws_decoder)
+                                else orjson.loads(raw_text)
+                            )
+                        elif "bytes" in data:
+                            data_payload = (
+                                self.ws_decoder(data["bytes"])
+                                if hasattr(self, "ws_decoder")
+                                and callable(self.ws_decoder)
+                                else orjson.loads(data["bytes"])
+                            )
+                        else:
+                            data_payload = data
+
+                        asyncio.create_task(
+                            self._dispatch_receive(data_payload)
+                        )
+                    except Exception:
+                        logger.exception("Invalid WS data received")
                 elif data["type"] == "websocket.disconnect":
                     self.__kill__()
-                    self.disconnect(data.get("code", 1000))
+                    code = data.get("code", 1000)
+                    if self._is_async_disconnect:
+                        if self._disconnect_has_params:
+                            await self.disconnect(code)
+                        else:
+                            await self.disconnect()
+                    else:
+                        if self._disconnect_has_params:
+                            self.disconnect(code)
+                        else:
+                            self.disconnect()
                 elif data["type"] == "websocket.connect":
-                    data = {"type": "websocket.accept"}
+                    resp = {"type": "websocket.accept"}
                     if self.scope.get("__chosen_subprotocol__"):
-                        data["subprotocol"] = self.scope.get(
+                        resp["subprotocol"] = self.scope.get(
                             "__chosen_subprotocol__"
                         )
-                    await self.__send__(data)
-                    self.connect()
+                    elif hasattr(self, "subprotocol") and self.subprotocol:
+                        resp["subprotocol"] = self.subprotocol
+                    async with self.__send_lock__:
+                        await self.__send__(resp)
+                    if self._is_async_connect:
+                        await self.connect()
+                    else:
+                        self.connect()
                 else:
                     raise ValueError(f"Invalid WS data type: {data['type']}")
 
@@ -199,19 +313,18 @@ class BaseSocketServer(Broadcaster):
             broadcast_listener_task = asyncio.create_task(
                 self.__broadcast_listener_task__()
             )
-            # wait until the socket server is killed or the tasks are cancelled
+            # Wait until the socket server is killed or the tasks are cancelled
             while self.is_alive:
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(0.05)
         # Catch exits handled by Daphne and allow the tasks to be cancelled
         except asyncio.CancelledError:
             pass
-        # Ensure all tasks are cancelled
-        ws_listener_task.cancel()
-        broadcast_listener_task.cancel()
-        # Allow the cancelation to run in the background
-        # The next line allows the async function to return
-        # and the above tasks to be cancelled in the background
-        await asyncio.sleep(0)
+        finally:
+            # Ensure all tasks are cancelled
+            ws_listener_task.cancel()
+            broadcast_listener_task.cancel()
+            # Allow the cancellation to run in the background
+            await asyncio.sleep(0)
 
     def start_listeners(self):
         """

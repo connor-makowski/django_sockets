@@ -6,8 +6,9 @@ logger = logging.getLogger(__name__)
 
 
 class DRFTokenAuthMiddleware(BaseTokenAuthMiddleware):
-    def __init__(self, app):
+    def __init__(self, app, select_related=None):
         super().__init__(app)
+        self.select_related = select_related or ["user"]
         try:
             from rest_framework.authtoken.models import Token
 
@@ -24,9 +25,12 @@ class DRFTokenAuthMiddleware(BaseTokenAuthMiddleware):
             )
             return None
         try:
-            user = self.TokenModel.objects.get(key=token).user
-            if user is not None and not user.is_active:
-                return None
-            return user
+            qs = self.TokenModel.objects
+            if self.select_related:
+                qs = qs.select_related(*self.select_related)
+            token_obj = qs.filter(key=token).first()
+            if token_obj and token_obj.user and token_obj.user.is_active:
+                return token_obj.user
+            return None
         except Exception:
             return None

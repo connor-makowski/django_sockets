@@ -32,7 +32,10 @@ def test_socket_lifecycle():
     async def send(data):
         if data == {"type": "websocket.accept"}:
             state["CONNECTION_ACCEPTED"] = True
-        elif data == {"type": "websocket.send", "text": '{"data": "test"}'}:
+        elif data.get("type") == "websocket.send" and (
+            data.get("text") == '{"data":"test"}'
+            or data.get("text") == '{"data": "test"}'
+        ):
             state["SEND_RECEIVED_BROADCAST"] = True
         else:
             state["SOMETHING_FAILED"] = True

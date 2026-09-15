@@ -7,8 +7,9 @@ logger = logging.getLogger(__name__)
 
 
 class SessionAuthMiddleware:
-    def __init__(self, app):
+    def __init__(self, app, select_related=None):
         self.app = app
+        self.select_related = select_related
         try:
             from django.contrib.auth.models import AnonymousUser
             from django.contrib.auth import get_user_model
@@ -32,34 +33,40 @@ class SessionAuthMiddleware:
             user_id = session.get("_auth_user_id")
             if user_id:
                 User = self.get_user_model()
-                try:
-                    user = User.objects.get(pk=user_id)
+                qs = User.objects
+                if self.select_related:
+                    qs = qs.select_related(*self.select_related)
+                user = qs.filter(pk=user_id).first()
+                if user is not None:
                     user.backend = session.get("_auth_user_backend")
                     return user
-                except User.DoesNotExist:
-                    pass
         except Exception as e:
             logger.debug(f"Error loading user from session: {e}")
         return None
 
     async def __call__(self, scope, receive, send):
         scope = dict(scope)
-        headers = dict(scope.get("headers", []))
+        raw_headers = scope.get("headers", [])
 
         # Determine the session cookie name from settings
         try:
             cookie_name = self.settings.SESSION_COOKIE_NAME
-        except:
+        except Exception:
             cookie_name = "sessionid"
 
         session_key = None
-        if b"cookie" in headers:
+        cookie_headers = [
+            v.decode("latin1", errors="ignore")
+            for k, v in raw_headers
+            if k.lower() == b"cookie"
+        ]
+        for cookie_str in cookie_headers:
             try:
-                cookie_str = headers[b"cookie"].decode()
                 cookie = SimpleCookie()
                 cookie.load(cookie_str)
                 if cookie_name in cookie:
                     session_key = cookie[cookie_name].value
+                    break
             except Exception as e:
                 logger.debug(f"Error parsing cookies: {e}")
 
