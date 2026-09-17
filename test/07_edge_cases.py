@@ -72,7 +72,7 @@ def test_edge_cases():
         ],
     )
     custom_socket_server.start_listeners()
-    time.sleep(0.2)
+    time.sleep(0.1)
 
     # A. Send connect first
     custom_receive.put_nowait({"type": "websocket.connect"})
@@ -88,7 +88,7 @@ def test_edge_cases():
     custom_receive.put_nowait(
         {"type": "websocket.receive", "text": '{"valid": "data"}'}
     )
-    time.sleep(0.2)
+    time.sleep(0.1)
 
     # D. Test broadcasting to non-existent channel (should not fail)
     custom_socket_server.broadcast("non_existent_channel", {"hello": "world"})

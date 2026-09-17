@@ -43,6 +43,7 @@ class SocketServer(BaseSocketServer):
         """
         Called when a WebSocket client connects. We subscribe the client
         to a user-scoped channel using their user ID.
+        Supports synchronous 'def connect' or asynchronous 'async def connect'.
         """
         self.channel_id = str(self.scope["user"].id)
         self.subscribe(self.channel_id)
@@ -51,6 +52,7 @@ class SocketServer(BaseSocketServer):
         """
         Called when a client sends JSON data. Updates the counter
         and broadcasts it to the channel.
+        Supports synchronous 'def receive' or asynchronous 'async def receive'.
         """
         if data.get("command") == "reset":
             data["counter"] = 0
@@ -282,21 +284,32 @@ from django_sockets.utils import URLRouter
 
 
 def get_ws_asgi_application():
+    # Pass select_related (defaults to ["user"]) to optimize token lookups
     return DRFTokenAuthMiddleware(
         URLRouter(
             [
                 path("ws/", SocketServer.as_asgi),
             ]
-        )
+        ),
+        select_related=["user"],
     )
 ```
 
-### 5. Update client.html Subprotocol
-Modify `templates/client.html` to pass the token using the `Sec-WebSocket-Protocol` header:
+### 5. Update client.html for Authentication
+Modify `templates/client.html` to pass the authentication token. `DRFTokenAuthMiddleware` supports two methods:
+
+#### Option A: Subprotocol Header (`Sec-WebSocket-Protocol`)
 ```javascript
         const wsUrl = "ws://localhost:8000/ws/";
         // Pass the token inside the subprotocols list prefixing it with 'Token.'
         const websocket = new WebSocket(wsUrl, ["Token.{{ token }}"]);
+```
+
+#### Option B: Query String Parameter
+```javascript
+        // Alternatively, pass the token as a query parameter (?token=... or ?auth_token=...)
+        const wsUrl = "ws://localhost:8000/ws/?token={{ token }}";
+        const websocket = new WebSocket(wsUrl);
 ```
 
 Run the server again using Uvicorn. Authenticated users will now connect securely via token authentication.

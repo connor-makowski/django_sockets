@@ -24,12 +24,12 @@ def test_custom_socket_receive():
         ],
     )
     custom_socket_server.start_listeners()
-    time.sleep(0.2)
+    time.sleep(0.1)
     custom_receive.put_nowait(
         {"type": "websocket.receive", "text": '{"data": "test data"}'}
     )
     # Give the async functions a small amount of time to complete
-    time.sleep(0.2)
+    time.sleep(0.1)
 
     custom_socket_server.__kill__()
 

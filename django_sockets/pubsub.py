@@ -1,5 +1,6 @@
-import asyncio, logging, binascii, msgpack, logging, uuid
+import asyncio, logging, binascii, msgpack, uuid
 from redis.asyncio import Redis, ConnectionPool, sentinel
+from redis.asyncio.cluster import RedisCluster
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,14 @@ class PubSubLayer:
     This layer is designed to be used with asyncio and is not necessarily thread-safe.
     """
 
+    __slots__ = (
+        "queue",
+        "subscriptions",
+        "shards",
+        "_single_shard",
+        "_shard_size",
+    )
+
     def __init__(
         self,
         hosts=None,
@@ -21,7 +30,7 @@ class PubSubLayer:
 
         Requires:
         - hosts: A list of dictionaries
-            - Note: This uses a redis connection pool or a sentinel connection pool to connect to the Redis server.
+            - Note: This uses a redis connection pool, sentinel connection pool, or redis cluster to connect to the Redis server.
             - Each dictionary should contain the following key value pairs (depending on the connection pool type):
                 - ConnectionPool:
                     - address: The address of the Redis server
@@ -37,6 +46,10 @@ class PubSubLayer:
                     - sentinels: A list of sentinel addresses
                     - sentinel_kwargs: A dictionary of keyword arguments to pass to the sentinel connect
                     - Other keys listed in the redis-py SentinelConnectionPool documentation
+                - RedisCluster:
+                    - is_cluster or cluster: bool = Set to True to enable RedisCluster mode
+                    - address: The address of the Redis cluster seed node
+                    - Other keys listed in the redis-py RedisCluster documentation
         """
         self.queue = asyncio.Queue()
         self.subscriptions = dict()
@@ -45,6 +58,12 @@ class PubSubLayer:
         if len(hosts) == 0:
             raise ValueError("Hosts must contain at least one dictionary")
         self.shards = [ShardConnection(host, self) for host in hosts]
+        if len(self.shards) == 1:
+            self._single_shard = self.shards[0]
+            self._shard_size = None
+        else:
+            self._single_shard = None
+            self._shard_size = 4096 / float(len(self.shards))
 
     # PubSub methods
     async def subscribe(self, channel: str):
@@ -71,6 +90,29 @@ class PubSubLayer:
         shard = self.__get_shard__(channel)
         await shard.publish(channel, data)
 
+    async def send_many(self, channels: list[str], data):
+        """
+        Send data to multiple channels efficiently using shard grouping and pipelining
+        """
+        if not channels:
+            return
+        if self._single_shard is not None:
+            await self._single_shard.publish_many(channels, data)
+            return
+
+        shard_channels = dict()
+        for channel in channels:
+            shard = self.__get_shard__(channel)
+            if shard not in shard_channels:
+                shard_channels[shard] = []
+            shard_channels[shard].append(channel)
+
+        tasks = [
+            shard.publish_many(chs, data)
+            for shard, chs in shard_channels.items()
+        ]
+        await asyncio.gather(*tasks)
+
     async def receive(self) -> dict | None:
         """
         Get the next item from the queue. This will hang until an item is available.
@@ -93,9 +135,9 @@ class PubSubLayer:
 
     async def flush(self):
         """
-        Flush the layer and close all connections.
+        Flush the layer and close all connections across all shards.
         """
-        for shard in set(self.subscriptions.values()):
+        for shard in self.shards:
             try:
                 await shard.flush()
             except asyncio.CancelledError:
@@ -113,17 +155,43 @@ class PubSubLayer:
 
         This is done by assigning a shard index location based on the CRC32 of the channel name.
         """
-        if len(self.shards) == 1:
-            shard_index = 0
-        else:
-            hash_val = binascii.crc32(channel.encode("utf8")) & 0xFFF
-            shard_index = int(hash_val / (4096 / float(len(self.shards))))
+        if self._single_shard is not None:
+            return self._single_shard
+        channel_bytes = (
+            channel.encode("utf-8")
+            if isinstance(channel, str)
+            else str(channel).encode("utf-8")
+        )
+        hash_val = binascii.crc32(channel_bytes) & 0xFFF
+        shard_index = int(hash_val / self._shard_size)
         return self.shards[shard_index]
 
 
 class ShardConnection:
+    __slots__ = (
+        "host",
+        "is_cluster",
+        "connection_pool",
+        "pubsub_layer_obj",
+        "lock",
+        "connection",
+        "pubsub",
+        "receiver_task",
+        "subscriptions",
+        "prefix",
+        "_prefix_len",
+    )
+
     def __init__(self, host, pubsub_layer_obj, prefix="pubsub"):
-        self.connection_pool = self.__get_connection_pool__(host)
+        self.host = host.copy()
+        self.is_cluster = bool(
+            self.host.pop("is_cluster", False)
+            or self.host.pop("cluster", False)
+        )
+        if not self.is_cluster:
+            self.connection_pool = self.__get_connection_pool__(self.host)
+        else:
+            self.connection_pool = None
         self.pubsub_layer_obj = pubsub_layer_obj
         self.lock = asyncio.Lock()
         self.connection = None
@@ -131,6 +199,7 @@ class ShardConnection:
         self.receiver_task = None
         self.subscriptions = set()
         self.prefix = prefix
+        self._prefix_len = len(prefix) + 1
 
     # PubSub methods
     async def subscribe(self, channel):
@@ -156,18 +225,53 @@ class ShardConnection:
             await self.flush()
 
     async def publish(self, channel, message):
-        channel = self.__get_channel_name__(channel)
-        async with self.lock:
-            await self.__ensure_connection__(calling_fn="publish")
-            message = self.__serialize__(message)
-            # if the message is larger than 1MB, then save it as a uuid in the same cache and send the uuid
-            # This helps bypass the 32 MB limit on pubsub queue size for most cache servers
-            # Ensure that this objeect times out after 60s to keep the cache clean
-            if len(message) > 1024 * 1024:
-                msg_loc_key = f"{self.prefix}.{str(uuid.uuid4())}"
-                await self.connection.set(msg_loc_key, message, ex=60)
-                message = self.__serialize__(f"msg:{msg_loc_key}")
-            await self.connection.publish(channel, message)
+        channel_name = self.__get_channel_name__(channel)
+        # Serialize payload outside the connection lock to avoid blocking other concurrent publishes
+        serialized_message = self.__serialize__(message)
+
+        # If the message is larger than 1MB, save it in the cache with a 60s TTL and publish the key pointer
+        if len(serialized_message) > 1024 * 1024:
+            msg_loc_key = f"{self.prefix}.{str(uuid.uuid4())}"
+            pointer_message = self.__serialize__(f"msg:{msg_loc_key}")
+            async with self.lock:
+                await self.__ensure_connection__(calling_fn="publish")
+                await self.connection.set(
+                    msg_loc_key, serialized_message, ex=60
+                )
+                await self.connection.publish(channel_name, pointer_message)
+        else:
+            async with self.lock:
+                await self.__ensure_connection__(calling_fn="publish")
+                await self.connection.publish(channel_name, serialized_message)
+
+    async def publish_many(self, channels: list[str], message):
+        if not channels:
+            return
+        serialized_message = self.__serialize__(message)
+        prefix = self.prefix
+
+        if len(serialized_message) > 1024 * 1024:
+            msg_loc_key = f"{prefix}.{str(uuid.uuid4())}"
+            pointer_message = self.__serialize__(f"msg:{msg_loc_key}")
+            async with self.lock:
+                await self.__ensure_connection__(calling_fn="publish_many")
+                await self.connection.set(
+                    msg_loc_key, serialized_message, ex=60
+                )
+                pipe = self.connection.pipeline()
+                for ch in channels:
+                    pipe.publish(f"{prefix}.{ch}", pointer_message)
+                await pipe.execute()
+        else:
+            async with self.lock:
+                await self.__ensure_connection__(calling_fn="publish_many")
+                pipe = self.connection.pipeline()
+                for ch in channels:
+                    pipe.publish(
+                        f"{prefix}.{ch}",
+                        serialized_message,
+                    )
+                await pipe.execute()
 
     async def ensure_receiver_task(self):
         async with self.lock:
@@ -180,86 +284,131 @@ class ShardConnection:
 
     async def flush(self):
         # Flushing is not locked since it can be called from inside the lock
-        if self.receiver_task:
+        if self.receiver_task and self.receiver_task != asyncio.current_task():
             self.receiver_task.cancel()
             try:
                 await self.receiver_task
             except asyncio.CancelledError:
                 pass
             self.receiver_task = None
+        elif self.receiver_task == asyncio.current_task():
+            self.receiver_task = None
+
         if self.pubsub:
-            await self.pubsub.aclose()
+            try:
+                await self.pubsub.aclose()
+            except Exception:
+                pass
             self.pubsub = None
         if self.connection:
-            await self.connection.aclose()
+            try:
+                await self.connection.aclose()
+            except Exception:
+                pass
             self.connection = None
 
     # Tasks
     async def __receiver_task__(self):
         """
-        Start a task to receive messages from the pubsub and put them in the queue
+        Start an event-driven task to receive messages from the pubsub and put them in the queue.
 
-        This task will run until all subscriptions are removed.
-
-        It will loop continuously as awaiting the pubsub.get_message will not hang the event loop.
+        Uses async generator `pubsub.listen()` backed by socket I/O rather than artificial polling sleep.
         """
-        # print("RECEIVER TASK STARTING")
-        while len(self.subscriptions) > 0:
-            try:
-                # Make sure pubsub is active and subscribed otherwise wait for subscription to be established
-                if self.pubsub and self.pubsub.subscribed:
-                    # Get messages from the pubsub
-                    message = await self.pubsub.get_message(
-                        ignore_subscribe_messages=True
-                    )
-                    # If message is not None, put it in the channel queue
-                    if message:
-                        message_data = self.__deserialize__(message["data"])
-                        # If the message was too large, then get that message from the cache
-                        if isinstance(message_data, str):
-                            if message_data.startswith("msg:"):
+        try:
+            while len(self.subscriptions) > 0:
+                try:
+                    if not self.pubsub:
+                        async with self.lock:
+                            await self.__ensure_connection__(
+                                calling_fn="receiver"
+                            )
+                            if self.subscriptions:
+                                await self.pubsub.subscribe(*self.subscriptions)
+
+                    async for message in self.pubsub.listen():
+                        if not self.pubsub or len(self.subscriptions) == 0:
+                            break
+                        if message and message.get("type") == "message":
+                            message_data = self.__deserialize__(message["data"])
+                            # If the message was too large, get that message from the cache
+                            if isinstance(
+                                message_data, str
+                            ) and message_data.startswith("msg:"):
                                 msg_loc_key = message_data[4:]
-                                message_data = self.__deserialize__(
-                                    await self.connection.get(msg_loc_key)
-                                )
-                        self.pubsub_layer_obj.queue.put_nowait(
-                            {
-                                "channel": self.__get_channel_from_name__(
-                                    message["channel"].decode()
-                                ),
-                                "data": message_data,
-                            }
-                        )
-                # Wait for a short time to prevent busy waiting
-                # This also serves to wait for the pubsub layer to be subscribed to the channel
-                await asyncio.sleep(0.1)
-            # Exit on cancellation, timeout, or generator exit (for cleanup afer connection is closed)
-            except (
-                asyncio.CancelledError,
-                asyncio.TimeoutError,
-                GeneratorExit,
-            ):
-                # print("RECEIVER TASK KILLED")
-                raise asyncio.CancelledError
-            except:
-                logger.exception(
-                    "Exception while receiving message from pubsub"
-                )
-        await self.flush()
+                                if self.connection:
+                                    raw_msg = await self.connection.get(
+                                        msg_loc_key
+                                    )
+                                    if raw_msg is not None:
+                                        message_data = self.__deserialize__(
+                                            raw_msg
+                                        )
+                            raw_channel = message["channel"]
+                            channel_name = (
+                                raw_channel.decode("utf-8")
+                                if isinstance(raw_channel, bytes)
+                                else raw_channel
+                            )
+                            self.pubsub_layer_obj.queue.put_nowait(
+                                {
+                                    "channel": self.__get_channel_from_name__(
+                                        channel_name
+                                    ),
+                                    "data": message_data,
+                                }
+                            )
+                except (asyncio.CancelledError, GeneratorExit):
+                    raise
+                except Exception as e:
+                    if len(self.subscriptions) == 0:
+                        break
+                    logger.warning(
+                        f"Connection lost in pubsub receiver, attempting reconnect: {e}"
+                    )
+                    async with self.lock:
+                        try:
+                            await self.__ensure_connection__(
+                                calling_fn="receiver_reconnect", force=True
+                            )
+                            if self.subscriptions:
+                                await self.pubsub.subscribe(*self.subscriptions)
+                        except Exception:
+                            pass
+                    await asyncio.sleep(0.5)
+        except (asyncio.CancelledError, GeneratorExit):
+            raise
+        finally:
+            await self.flush()
 
     # Utility Methods
-    async def __ensure_connection__(self, calling_fn: str):
+    async def __ensure_connection__(self, calling_fn: str, force: bool = False):
         """
         Ensure that the connection to the cache is established.
 
         Note: This should only be called within a lock.
         """
+        if force and self.connection:
+            try:
+                await self.connection.aclose()
+            except Exception:
+                pass
+            self.connection = None
+            self.pubsub = None
+
         if not self.connection:
-            self.connection = Redis(connection_pool=self.connection_pool)
+            if self.is_cluster:
+                host_cfg = self.host.copy()
+                if "address" in host_cfg:
+                    address = host_cfg.pop("address")
+                    self.connection = RedisCluster.from_url(address, **host_cfg)
+                else:
+                    self.connection = RedisCluster(**host_cfg)
+            else:
+                self.connection = Redis(connection_pool=self.connection_pool)
             # If the connection failed, then raise an exception
             try:
                 is_connected = await self.connection.ping()
-            except:
+            except Exception:
                 is_connected = False
             if not is_connected:
                 logger.log(
@@ -279,7 +428,7 @@ class ShardConnection:
         """
         Get the channel name without the prefix.
         """
-        return channel_name[len(self.prefix) + 1 :]
+        return channel_name[self._prefix_len :]
 
     def __serialize__(self, message):
         """
