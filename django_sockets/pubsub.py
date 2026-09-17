@@ -13,6 +13,14 @@ class PubSubLayer:
     This layer is designed to be used with asyncio and is not necessarily thread-safe.
     """
 
+    __slots__ = (
+        "queue",
+        "subscriptions",
+        "shards",
+        "_single_shard",
+        "_shard_size",
+    )
+
     def __init__(
         self,
         hosts=None,
@@ -22,7 +30,7 @@ class PubSubLayer:
 
         Requires:
         - hosts: A list of dictionaries
-            - Note: This uses a redis connection pool or a sentinel connection pool to connect to the Redis server.
+            - Note: This uses a redis connection pool, sentinel connection pool, or redis cluster to connect to the Redis server.
             - Each dictionary should contain the following key value pairs (depending on the connection pool type):
                 - ConnectionPool:
                     - address: The address of the Redis server
@@ -38,6 +46,10 @@ class PubSubLayer:
                     - sentinels: A list of sentinel addresses
                     - sentinel_kwargs: A dictionary of keyword arguments to pass to the sentinel connect
                     - Other keys listed in the redis-py SentinelConnectionPool documentation
+                - RedisCluster:
+                    - is_cluster or cluster: bool = Set to True to enable RedisCluster mode
+                    - address: The address of the Redis cluster seed node
+                    - Other keys listed in the redis-py RedisCluster documentation
         """
         self.queue = asyncio.Queue()
         self.subscriptions = dict()
@@ -46,6 +58,12 @@ class PubSubLayer:
         if len(hosts) == 0:
             raise ValueError("Hosts must contain at least one dictionary")
         self.shards = [ShardConnection(host, self) for host in hosts]
+        if len(self.shards) == 1:
+            self._single_shard = self.shards[0]
+            self._shard_size = None
+        else:
+            self._single_shard = None
+            self._shard_size = 4096 / float(len(self.shards))
 
     # PubSub methods
     async def subscribe(self, channel: str):
@@ -78,6 +96,10 @@ class PubSubLayer:
         """
         if not channels:
             return
+        if self._single_shard is not None:
+            await self._single_shard.publish_many(channels, data)
+            return
+
         shard_channels = dict()
         for channel in channels:
             shard = self.__get_shard__(channel)
@@ -85,9 +107,10 @@ class PubSubLayer:
                 shard_channels[shard] = []
             shard_channels[shard].append(channel)
 
-        tasks = []
-        for shard, chs in shard_channels.items():
-            tasks.append(shard.publish_many(chs, data))
+        tasks = [
+            shard.publish_many(chs, data)
+            for shard, chs in shard_channels.items()
+        ]
         await asyncio.gather(*tasks)
 
     async def receive(self) -> dict | None:
@@ -132,16 +155,33 @@ class PubSubLayer:
 
         This is done by assigning a shard index location based on the CRC32 of the channel name.
         """
-        if len(self.shards) == 1:
-            shard_index = 0
-        else:
-            channel_bytes = str(channel).encode("utf-8")
-            hash_val = binascii.crc32(channel_bytes) & 0xFFF
-            shard_index = int(hash_val / (4096 / float(len(self.shards))))
+        if self._single_shard is not None:
+            return self._single_shard
+        channel_bytes = (
+            channel.encode("utf-8")
+            if isinstance(channel, str)
+            else str(channel).encode("utf-8")
+        )
+        hash_val = binascii.crc32(channel_bytes) & 0xFFF
+        shard_index = int(hash_val / self._shard_size)
         return self.shards[shard_index]
 
 
 class ShardConnection:
+    __slots__ = (
+        "host",
+        "is_cluster",
+        "connection_pool",
+        "pubsub_layer_obj",
+        "lock",
+        "connection",
+        "pubsub",
+        "receiver_task",
+        "subscriptions",
+        "prefix",
+        "_prefix_len",
+    )
+
     def __init__(self, host, pubsub_layer_obj, prefix="pubsub"):
         self.host = host.copy()
         self.is_cluster = bool(
@@ -159,6 +199,7 @@ class ShardConnection:
         self.receiver_task = None
         self.subscriptions = set()
         self.prefix = prefix
+        self._prefix_len = len(prefix) + 1
 
     # PubSub methods
     async def subscribe(self, channel):
@@ -207,9 +248,10 @@ class ShardConnection:
         if not channels:
             return
         serialized_message = self.__serialize__(message)
+        prefix = self.prefix
 
         if len(serialized_message) > 1024 * 1024:
-            msg_loc_key = f"{self.prefix}.{str(uuid.uuid4())}"
+            msg_loc_key = f"{prefix}.{str(uuid.uuid4())}"
             pointer_message = self.__serialize__(f"msg:{msg_loc_key}")
             async with self.lock:
                 await self.__ensure_connection__(calling_fn="publish_many")
@@ -218,7 +260,7 @@ class ShardConnection:
                 )
                 pipe = self.connection.pipeline()
                 for ch in channels:
-                    pipe.publish(self.__get_channel_name__(ch), pointer_message)
+                    pipe.publish(f"{prefix}.{ch}", pointer_message)
                 await pipe.execute()
         else:
             async with self.lock:
@@ -226,7 +268,7 @@ class ShardConnection:
                 pipe = self.connection.pipeline()
                 for ch in channels:
                     pipe.publish(
-                        self.__get_channel_name__(ch),
+                        f"{prefix}.{ch}",
                         serialized_message,
                     )
                 await pipe.execute()
@@ -386,7 +428,7 @@ class ShardConnection:
         """
         Get the channel name without the prefix.
         """
-        return channel_name[len(self.prefix) + 1 :]
+        return channel_name[self._prefix_len :]
 
     def __serialize__(self, message):
         """

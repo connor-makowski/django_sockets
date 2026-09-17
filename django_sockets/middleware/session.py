@@ -7,7 +7,33 @@ logger = logging.getLogger(__name__)
 
 
 class SessionAuthMiddleware:
+    """
+    Middleware that authenticates a Django user from the session cookie in
+    the WebSocket connection headers.
+    """
+
+    __slots__ = (
+        "app",
+        "select_related",
+        "AnonymousUser",
+        "get_user_model",
+        "settings",
+        "_cookie_name",
+    )
+
     def __init__(self, app, select_related=None):
+        """
+        Initialize the Session Auth Middleware
+
+        Requires:
+
+        - app: ASGI application = The downstream ASGI application
+
+        Optional:
+
+        - select_related: list[str] = Model fields to pass to `select_related()`
+            when querying the user model from the database session ID
+        """
         self.app = app
         self.select_related = select_related
         try:
@@ -18,10 +44,14 @@ class SessionAuthMiddleware:
             self.AnonymousUser = AnonymousUser
             self.get_user_model = get_user_model
             self.settings = settings
+            self._cookie_name = getattr(
+                settings, "SESSION_COOKIE_NAME", "sessionid"
+            )
         except Exception:
             self.AnonymousUser = None
             self.get_user_model = None
             self.settings = None
+            self._cookie_name = "sessionid"
 
     @sync_to_async
     def get_user_from_session_key(self, session_key):
@@ -47,28 +77,21 @@ class SessionAuthMiddleware:
     async def __call__(self, scope, receive, send):
         scope = dict(scope)
         raw_headers = scope.get("headers", [])
-
-        # Determine the session cookie name from settings
-        try:
-            cookie_name = self.settings.SESSION_COOKIE_NAME
-        except Exception:
-            cookie_name = "sessionid"
+        cookie_name = self._cookie_name
 
         session_key = None
-        cookie_headers = [
-            v.decode("latin1", errors="ignore")
-            for k, v in raw_headers
-            if k.lower() == b"cookie"
-        ]
-        for cookie_str in cookie_headers:
-            try:
-                cookie = SimpleCookie()
-                cookie.load(cookie_str)
-                if cookie_name in cookie:
-                    session_key = cookie[cookie_name].value
-                    break
-            except Exception as e:
-                logger.debug(f"Error parsing cookies: {e}")
+        for k, v in raw_headers:
+            if k.lower() == b"cookie":
+                cookie_str = v.decode("latin1", errors="ignore")
+                if cookie_name in cookie_str:
+                    try:
+                        cookie = SimpleCookie()
+                        cookie.load(cookie_str)
+                        if cookie_name in cookie:
+                            session_key = cookie[cookie_name].value
+                            break
+                    except Exception as e:
+                        logger.debug(f"Error parsing cookies: {e}")
 
         user = None
         if session_key:

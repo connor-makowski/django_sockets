@@ -7,7 +7,21 @@ _LOOP_START_LOCK = threading.Lock()
 
 
 class ProtocolTypeRouter:
+    """
+    ASGI application router that routes incoming connections based on scope type
+    (e.g., 'http', 'websocket', or 'lifespan').
+    """
+
+    __slots__ = ("application_mapping",)
+
     def __init__(self, application_mapping):
+        """
+        Initialize the ProtocolTypeRouter
+
+        Requires:
+
+        - application_mapping: dict = Mapping of ASGI scope types (str) to ASGI applications
+        """
         self.application_mapping = application_mapping
 
     async def __call__(self, scope, receive, send):
@@ -32,7 +46,21 @@ class ProtocolTypeRouter:
 
 
 class URLRouter:
+    """
+    ASGI application router that routes WebSocket requests based on URL path patterns.
+    Automatically handles path matching with or without trailing slashes.
+    """
+
+    __slots__ = ("routes",)
+
     def __init__(self, routes):
+        """
+        Initialize the URLRouter
+
+        Requires:
+
+        - routes: list = List of Django URL path patterns (e.g., `path("ws/", App.as_asgi)`)
+        """
         self.routes = routes
 
     async def __call__(self, scope, receive, send):

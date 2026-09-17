@@ -28,7 +28,7 @@ def test_basic_function_big():
     payload = {f"key{i}": f"val{i}" for i in range(1024 * 256)}
     base_socket_server.broadcast("basic_function_big", payload)
     # Give the async functions some time to complete
-    time.sleep(1)
+    time.sleep(0.2)
 
     base_socket_server.__kill__()
 

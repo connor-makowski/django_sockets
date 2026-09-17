@@ -1,10 +1,30 @@
+from urllib.parse import parse_qs
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class BaseTokenAuthMiddleware:
+    """
+    Base middleware class for token-based WebSocket authentication.
+
+    Extracts tokens from either:
+    1. Query string parameters: `?token=<key>` or `?auth_token=<key>`
+    2. Subprotocol headers: `Sec-WebSocket-Protocol: Token.<key>`
+
+    Subclasses must implement `get_user(self, token)` to resolve the user.
+    """
+
+    __slots__ = ("app", "AnonymousUser", "__dict__")
+
     def __init__(self, app):
+        """
+        Initialize the Base Token Auth Middleware
+
+        Requires:
+
+        - app: ASGI application = The downstream ASGI application
+        """
         self.app = app
         try:
             from django.contrib.auth.models import AnonymousUser
@@ -37,8 +57,6 @@ class BaseTokenAuthMiddleware:
         raw_query = scope.get("query_string", b"")
         if raw_query:
             try:
-                from urllib.parse import parse_qs
-
                 query_str = (
                     raw_query.decode("utf-8")
                     if isinstance(raw_query, bytes)
@@ -46,12 +64,9 @@ class BaseTokenAuthMiddleware:
                 )
                 params = parse_qs(query_str)
                 for q_key in ("token", "auth_token"):
-                    if (
-                        q_key in params
-                        and params[q_key]
-                        and params[q_key][0].strip()
-                    ):
-                        token = params[q_key][0].strip()
+                    val = params.get(q_key)
+                    if val and val[0].strip():
+                        token = val[0].strip()
                         break
             except Exception as e:
                 logger.debug(f"Error parsing query string token: {e}")

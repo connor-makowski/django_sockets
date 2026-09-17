@@ -52,19 +52,19 @@ def test_socket_lifecycle():
         ],
     )
     custom_socket_server.start_listeners()
-    time.sleep(0.2)
+    time.sleep(0.1)
     custom_receive.put_nowait({"type": "websocket.connect"})
-    time.sleep(0.2)
+    time.sleep(0.1)
     custom_receive.put_nowait(
         {"type": "websocket.receive", "text": '{"data": "test"}'}
     )
-    time.sleep(0.2)
+    time.sleep(0.1)
     custom_receive.put_nowait({"type": "websocket.disconnect", "code": 1000})
-    time.sleep(0.2)
+    time.sleep(0.1)
     custom_receive.put_nowait(
         {"type": "websocket.receive", "text": '{"data_after_close": "test"}'}
     )
-    time.sleep(0.2)
+    time.sleep(0.1)
 
     assert state["CONNECTION_ACCEPTED"] is True
     assert state["CONNECT_FN_CALLED"] is True

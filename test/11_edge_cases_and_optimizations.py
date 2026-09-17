@@ -71,6 +71,38 @@ def test_disconnect_signature_compatibility():
     print("11_edge_cases_and_optimizations.py (disconnect_sig): PASS")
 
 
+def test_async_disconnect_signature_compatibility():
+    state = {"disconnected": False}
+
+    class CustomNoArgAsyncDisconnectServer(BaseSocketServer):
+        async def disconnect(self):
+            # Async signature without `code` positional parameter
+            await asyncio.sleep(0.01)
+            state["disconnected"] = True
+
+    async def send(ws_data):
+        pass
+
+    q = asyncio.Queue()
+    hosts = [
+        {
+            "address": f"redis://{os.environ.get('CACHE_HOST')}:{os.environ.get('CACHE_PORT')}"
+        }
+    ]
+    server = CustomNoArgAsyncDisconnectServer(
+        scope={}, receive=q.get, send=send, hosts=hosts
+    )
+    server.start_listeners()
+    time.sleep(0.1)
+
+    # Trigger disconnect
+    q.put_nowait({"type": "websocket.disconnect", "code": 1001})
+    time.sleep(0.2)
+
+    assert state["disconnected"] is True
+    print("11_edge_cases_and_optimizations.py (async_disconnect_sig): PASS")
+
+
 def test_query_param_token_auth():
     class DummyDRFTokenAuth(DRFTokenAuthMiddleware):
         async def get_user(self, token):
@@ -289,6 +321,52 @@ def test_custom_subprotocol_negotiation():
     print("11_edge_cases_and_optimizations.py (subprotocol_negotiation): PASS")
 
 
+def test_init_ws_decoder_and_subprotocol():
+    received = []
+    received_payloads = []
+
+    async def send(ws_data):
+        received.append(ws_data)
+
+    class CustomDecodeServer(BaseSocketServer):
+        def receive(self, data):
+            received_payloads.append(data)
+
+    q = asyncio.Queue()
+    hosts = [
+        {
+            "address": f"redis://{os.environ.get('CACHE_HOST')}:{os.environ.get('CACHE_PORT')}"
+        }
+    ]
+
+    server = CustomDecodeServer(
+        scope={},
+        receive=q.get,
+        send=send,
+        hosts=hosts,
+        ws_decoder=lambda text: f"CUSTOM_DECODED:{text}",
+        subprotocol="wamp.2.json",
+    )
+    server.start_listeners()
+    time.sleep(0.1)
+
+    q.put_nowait({"type": "websocket.connect"})
+    time.sleep(0.1)
+
+    q.put_nowait({"type": "websocket.receive", "text": "hello-world"})
+    time.sleep(0.1)
+
+    server.__kill__()
+
+    assert any(
+        msg.get("type") == "websocket.accept"
+        and msg.get("subprotocol") == "wamp.2.json"
+        for msg in received
+    )
+    assert received_payloads == ["CUSTOM_DECODED:hello-world"]
+    print("11_edge_cases_and_optimizations.py (init_decoder_subprotocol): PASS")
+
+
 def test_cluster_config_initialization():
     from django_sockets.pubsub import ShardConnection, PubSubLayer
 
@@ -304,10 +382,12 @@ def test_cluster_config_initialization():
 if __name__ == "__main__":
     test_server_initiated_close()
     test_disconnect_signature_compatibility()
+    test_async_disconnect_signature_compatibility()
     test_query_param_token_auth()
     test_url_router_trailing_slash_flexibility()
     test_multi_cookie_header_session_auth()
     test_non_string_channel_identifiers()
     test_large_payload_multi_broadcast()
     test_custom_subprotocol_negotiation()
+    test_init_ws_decoder_and_subprotocol()
     test_cluster_config_initialization()

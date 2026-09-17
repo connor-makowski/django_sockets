@@ -1,15 +1,34 @@
 from django_sockets.sockets import (
     BaseSocketServer,
     __default_ws_encoder__,
+    __default_ws_decoder__,
 )
 import asyncio, time, os, orjson
+
+
+def test_default_ws_decoder():
+    # String input
+    assert __default_ws_decoder__('{"hello": "world", "count": 42}') == {
+        "hello": "world",
+        "count": 42,
+    }
+    # Bytes input
+    assert __default_ws_decoder__(b'{"bytes": true, "list": [1, 2]}') == {
+        "bytes": True,
+        "list": [1, 2],
+    }
+    print("12_non_string_keys.py (decoder_unit): PASS")
 
 
 def test_default_ws_encoder_non_str_keys():
     # 1. Integer keys
     int_dict = {1: "one", 2: "two", 100: "hundred"}
     encoded_int = __default_ws_encoder__(int_dict)
-    assert orjson.loads(encoded_int) == {"1": "one", "2": "two", "100": "hundred"}
+    assert orjson.loads(encoded_int) == {
+        "1": "one",
+        "2": "two",
+        "100": "hundred",
+    }
 
     # 2. Boolean keys
     bool_dict = {True: "yes", False: "no"}
@@ -62,7 +81,10 @@ def test_socket_send_non_str_keys():
 
     assert len(received_messages) == 1
     assert received_messages[0]["type"] == "websocket.send"
-    assert orjson.loads(received_messages[0]["text"]) == {"1": "one", "2": "two"}
+    assert orjson.loads(received_messages[0]["text"]) == {
+        "1": "one",
+        "2": "two",
+    }
     print("12_non_string_keys.py (socket_send): PASS")
 
 
@@ -109,6 +131,7 @@ def test_socket_broadcast_non_str_keys():
 
 
 if __name__ == "__main__":
+    test_default_ws_decoder()
     test_default_ws_encoder_non_str_keys()
     test_socket_send_non_str_keys()
     test_socket_broadcast_non_str_keys()

@@ -7,6 +7,8 @@ logger = logging.getLogger(__name__)
 
 
 class Broadcaster:
+    __slots__ = ("__loop__", "pubsub_layer")
+
     def __init__(
         self,
         *args,
@@ -69,7 +71,9 @@ class Broadcaster:
         - data: [dict|list] = The data to broadcast to the channel
             - Note: This data must be JSON serializable
         """
-        if isinstance(channel, (list, tuple, set)):
+        if isinstance(channel, str):
+            await self.pubsub_layer.send(channel, data)
+        elif isinstance(channel, (list, tuple, set)):
             await self.async_broadcast_many(list(channel), data)
         else:
             await self.pubsub_layer.send(str(channel), data)
