@@ -13,10 +13,11 @@ Simplified Django WebSocket integrations designed for speed, flexibility, and cl
 
 ## Key Features
 
-- **Cache-Backed Pub/Sub**: Async broadcasting using Redis or Valkey.
-- **Simplified Middleware**: Simple authentication wrappers for Django Sessions and Django Rest Framework (DRF) Tokens.
-- **ASGI Native**: Implements standard `ProtocolTypeRouter` and `URLRouter` for minimal overhead.
-- **Subprotocol Auth**: Supports secure token-based authentication via the `Sec-WebSocket-Protocol` header.
+- **Cache-Backed Pub/Sub**: Async broadcasting using Redis or Valkey across standalone, sentinel, or cluster (`RedisCluster`) setups.
+- **Async & Sync Handlers**: Implement `connect`, `receive`, and `disconnect` hooks as either synchronous methods (`def`) or asynchronous coroutines (`async def`).
+- **Multi-Channel Broadcasting**: Broadcast to single channels or batches of channels with Redis pipelining.
+- **Flexible Auth Middleware**: Simple authentication wrappers for Django Sessions and DRF Tokens supporting query string (`?token=...`) and subprotocol (`Sec-WebSocket-Protocol: Token.<token>`) token passing.
+- **ASGI Native**: Implements standard `ProtocolTypeRouter` and `URLRouter`
 - **Minimal Boilerplate**: Define a class with `connect`, `receive`, and `disconnect` hooks and you're ready to go.
 
 ---
@@ -54,12 +55,13 @@ class MyCounterSocket(BaseSocketServer):
         self.hosts = [{"address": "redis://localhost:6379"}]
 
     def connect(self):
-        # Scope-aware user extraction
+        # Scope-aware user extraction (supports sync 'def' or async 'async def')
         self.channel_id = f"user_{self.scope['user'].id}"
         self.subscribe(self.channel_id)
 
     def receive(self, data):
         # Broadcast incoming JSON to all subscribers of this channel
+        # (Supports sync 'def receive' or async 'async def receive')
         self.broadcast(self.channel_id, data)
 
 
@@ -130,6 +132,7 @@ We provide detailed step-by-step tutorials and code samples:
   - `examples/django/myapp`: Full project showing standard Django Session authentication.
   - `examples/django/myapp_drf`: Full project showing DRF Token authentication.
   - `examples/without_django`: Standalone python pub/sub without Django dependencies.
+- **[Performance Benchmarks (benchmark.md)](benchmark.md)**: Detailed benchmark profiles covering pub/sub latency, burst throughput, payload scaling, fan-out scalability, and authentication middleware.
 
 ---
 
@@ -138,7 +141,7 @@ We provide detailed step-by-step tutorials and code samples:
 `django_sockets` can run without Django's registry:
 
 ### 1. Broadcaster (Sending from Flask/FastAPI)
-Publish events from any HTTP route to WebSocket clients:
+Publish events from any HTTP route to WebSocket clients across single or multiple channels:
 ```python
 from flask import Flask, request
 from django_sockets.broadcaster import Broadcaster
@@ -149,7 +152,13 @@ broadcaster = Broadcaster(hosts=[{"address": "redis://localhost:6379"}])
 
 @app.route("/alert", methods=["POST"])
 def send_alert():
+    # Broadcast to a single channel:
     broadcaster.broadcast("alerts_channel", request.json)
+
+    # Or broadcast to multiple channels simultaneously with Redis pipelining:
+    # broadcaster.broadcast(["alerts_channel", "audit_log"], request.json)
+    # broadcaster.broadcast_many(["chan1", "chan2"], request.json)
+
     return {"status": "Alert sent"}
 ```
 
@@ -181,6 +190,11 @@ socket_server.start_listeners()
 Run the full pytest suite:
 ```bash
 uv run pytest
+```
+
+Run the performance benchmark suite:
+```bash
+uv run python utils/benchmark.py
 ```
 
 For manual testing, manage the local Docker Valkey instance using:
